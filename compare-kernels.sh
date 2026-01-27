@@ -407,26 +407,32 @@ generate_latency_graph() {
 generate_client_trans_graphs() {
 	CLIENT_LIST=$1
 	XLABEL="$2"
+	SUBHEADING="$3"
 	if [ "$CLIENT_LIST" = "" ]; then
-		CLIENT_LIST=`$COMPARE_BARE_CMD | grep ^Hmean | awk '{print $2}' | sort -n | uniq`
+		CLIENT_LIST=`$COMPARE_BARE_CMD --sub-heading $SUBHEADING | grep ^Hmean | awk '{print $2}' | sed -e 's/.*-//' | sort -n | uniq`
 		if [ "$CLIENT_LIST" = "" ]; then
-			CLIENT_LIST=`$COMPARE_BARE_CMD | grep ^Amean | awk '{print $2}' | sort -n | uniq`
+			CLIENT_LIST=`$COMPARE_BARE_CMD --sub-heading $SUBHEADING | grep ^Amean | awk '{print $2}' | sed -e 's/.*-//' | sort -n | uniq`
 		fi
+	fi
+	if [ "$SUBHEADING" != "" ] && ! [[ $SUBHEADING =~ - ]]; then
+		SUBHEADING+="-"
 	fi
 	if [ "$XLABEL" = "" ]; then
 		XLABEL="Time"
 	fi
+
 	COUNT=0
 	for CLIENT in $CLIENT_LIST; do
-		CLIENT_FILENAME=`echo $CLIENT | sed -e 's/\///'`
+		CLIENT_FILENAME=`echo $CLIENT | sed -e 's/\///' -e "s/$SUBHEADING//"`
 		echo "<tr>"
 		if [ "$CLIENT" = "1" ]; then
 			LABEL="$SUBREPORT transactions $CLIENT client"
 		else
 			LABEL="$SUBREPORT transactions $CLIENT clients"
 		fi
-		eval $GRAPH_PNG --sub-heading $CLIENT --plottype lines --title \"$LABEL\" --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-trans-${CLIENT_FILENAME} --x-label \"$XLABEL\" --with-smooth
-		eval $GRAPH_PNG --sub-heading $CLIENT --plottype lines --title \"$LABEL sorted\" --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-trans-${CLIENT_FILENAME}-sorted --sort-samples-reverse --x-label \"Sorted samples\"
+		echo $GRAPH_PNG --sub-heading $SUBHEADING$CLIENT\$ --plottype lines 1>&2
+		eval $GRAPH_PNG --sub-heading $SUBHEADING$CLIENT\$ --plottype lines --title \"$LABEL\" --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-trans-${CLIENT_FILENAME} --x-label \"$XLABEL\" --with-smooth
+		eval $GRAPH_PNG --sub-heading $SUBHEADING$CLIENT\$ --plottype lines --title \"$LABEL sorted\" --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-trans-${CLIENT_FILENAME}-sorted --sort-samples-reverse --x-label \"Sorted samples\"
 		plain graph-${SUBREPORT}-trans-${CLIENT_FILENAME}
 		plain graph-${SUBREPORT}-trans-${CLIENT_FILENAME}-smooth
 		plain graph-${SUBREPORT}-trans-${CLIENT_FILENAME}-sorted
@@ -1082,7 +1088,7 @@ for SUBREPORT in $REPORTS; do
 			echo "<tr>"
 			generate_basic_single "$SUBREPORT Completion times" "--logX"
 			generate_basic_single "$SUBREPORT Completion times" "--logX --logY"
-			generate_client_trans_graphs "`$COMPARE_BARE_CMD | grep ^Min | awk '{print $2}' | sort -n | uniq`" "Estimated time"
+			generate_client_trans_graphs "" "Sample" "loadfile"
 			echo "</tr>"
 			;;
 		ebizzy)

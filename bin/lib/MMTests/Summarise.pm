@@ -141,7 +141,7 @@ sub ratioSummaryOps() {
 }
 
 sub printPlot() {
-	my ($self, $subHeading) = @_;
+	my ($self, $subHeading, $plottype) = @_;
 	my %data = %{$self->{_ResultData}};
 	my @_operations;
 	my $fieldLength = $self->{_FieldLength};
@@ -152,6 +152,8 @@ sub printPlot() {
 	}
 	@_operations = $self->getOperations($subHeading);
 
+	$self->{_PlotType} = $plottype if defined($plottype);
+	$self->{_PlotType} = "simple-samples" if ($plottype eq "lines");
 	if ($subHeading ne "" && $self->{_ExactSubheading} == 1) {
 		if (defined $self->{_ExactPlottype}) {
 			$self->{_PlotType} = $self->{_ExactPlottype};

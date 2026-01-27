@@ -7,7 +7,8 @@ SCRIPTDIR=`echo $0 | sed -e "s/$SCRIPT//"`
 EXTRACT_ARGS=
 TEST_LIST=
 TMPDIR=
-TITLE="Default Title"
+TITLE=
+METRIC=
 SMOOTH=
 YRANGE_COMMAND=
 XRANGE_COMMAND=
@@ -42,6 +43,10 @@ while [ "$1" != "" ]; do
 	case "$1" in
 	-n)
 		TEST_LIST="`echo $2 | sed -e 's/,/ /g'`"
+		shift 2
+		;;
+	--metric)
+		METRIC="$2"
 		shift 2
 		;;
 	--title)
@@ -134,34 +139,84 @@ while [ "$1" != "" ]; do
 		;;
 	-b)
 		SUBREPORT="$2"
-		EXTRACT_ARGS="$EXTRACT_ARGS $1 $2"
+		EXTRACT_ARGS+=" $1 $2"
 		SUBREPORT_ARGS="--subreport $SUBREPORT"
 		shift 2
 		;;
 	-a)
 		ALTREPORT="$2"
-		EXTRACT_ARGS="$EXTRACT_ARGS $1 $2"
+		EXTRACT_ARGS+=" $1 $2"
+		shift 2
+		;;
+	--sub-heading)
+		EXTRACT_ARGS+=" $1 $2"
+		SUBHEADING="$2"
 		shift 2
 		;;
 	*)
 		echo $1 | grep -q ' '
 		if [ $? -eq 0 ]; then
-			EXTRACT_ARGS="$EXTRACT_ARGS \"$1\""
+			EXTRACT_ARGS+=" \"$1\""
 		else
-			EXTRACT_ARGS="$EXTRACT_ARGS $1"
+			EXTRACT_ARGS+=" $1"
 		fi
 		shift
 		;;
 	esac
 done
 
+EXTRACT_ARGS=`echo "$EXTRACT_ARGS" | sed -e 's/\\$/\\\\$/g'`
+SHELLPACK_YAML="$SCRIPTDIR/../shellpack_src/src/$SUBREPORT/shellpack.yaml"
+[ ! -e $SHELLPACK_YAML ] && SHELLPACK_YAML=""
+lookup_metric() {
+	if [ "$METRIC" = "" -a -e $SHELLPACK_YAML ]; then
+		METRIC=`yq '."default-metric"' $SHELLPACK_YAML | sed -e 's/\"//g'`
+	fi
+}
+
+lookup_type() {
+	if [ ! -e $SHELLPACK_YAML ]; then
+		TYPE=`$SCRIPTDIR/extract-mmtests.pl --format script -n $TEST $EXTRACT_ARGS --print-type`
+		XLABEL=`echo $TYPE | cut -d, -f2`
+		YLABEL=`echo $TYPE | cut -d, -f3`
+		PLOTTYPE=`echo $TYPE | cut -d, -f4`
+		return
+	fi
+
+	XLABEL=`yq '.PlotXaxis' $SHELLPACK_YAML | sed -e 's/"//g'`
+	PLOTTYPE=`yq .$METRIC.PlotType $SHELLPACK_YAML 2>/dev/null | sed -e 's/"//g'`
+	[ "$PLOTTYPE" = "null" ] && PLOTTYPE=`yq .PlotType $SHELLPACK_YAML 2>/dev/null | sed -e 's/"//g'`
+	[ "$PLOTTYPE" = "" ] && PLOTTYPE="operation-candlesticks"
+
+	YUNITS=`yq .$METRIC.units $SHELLPACK_YAML | sed -e 's/"//g'`
+	if [ "$YUNITS" = "null" ]; then
+		YLABEL="Unknown units .$METRIC.units"
+		return
+	fi
+	YLABEL=`$SCRIPTDIR/lookup-unit-label $YUNITS`
+}
+
+lookup_title() {
+	if [ "$TITLE" != "" ]; then
+		return
+	fi
+
+	if [ ! -e $SHELLPACK_YAML ]; then
+		TITLE="Default Title"
+		return
+	fi
+
+	TITLE=`yq .$METRIC.title $SHELLPACK_YAML | sed -e 's/"//g'`
+	[ "$TITLE" = "null" ] && TITLE="Unknown Title for $SUBREPORT.$METRIC"
+}
+
 # for cycle used just to get the first test easily, breaks after first iteration
 for TEST in $TEST_LIST; do
-	# Read graph information as described by extract-mmtests.pl
-	TYPE=`$SCRIPTDIR/extract-mmtests.pl --format script -n $TEST $EXTRACT_ARGS --print-type`
-	XLABEL=`echo $TYPE | cut -d, -f2`
-	YLABEL=`echo $TYPE | cut -d, -f3`
-	PLOTTYPE=`echo $TYPE | cut -d, -f4`
+	# Read graph information as described by extract-mmtests.pl or shellpack.yaml
+	lookup_metric
+	lookup_type
+	lookup_title
+
 	if [ "$XLABEL" = "" ]; then
 		XLABEL="Unknown X Label"
 	fi
@@ -175,7 +230,6 @@ for TEST in $TEST_LIST; do
 
 	if [ "$GRAPH_DEBUG" = "yes" ]; then
 		echo "TRACE: $SCRIPTDIR/extract-mmtests.pl --format script -n $TEST $EXTRACT_ARGS --print-type"
-		echo "TRACE: TYPE     $TYPE"
 		echo "TRACE: XLABEL   $XLABEL"
 		echo "TRACE: YLABEL   $YLABEL"
 		echo "TRACE: PLOTTYPE $PLOTTYPE"
@@ -192,10 +246,12 @@ COUNT=0
 for TEST in $TEST_LIST; do
 	PLOTFILE="$TMPDIR/$TEST"
 	EXTRACT_CMD="$SCRIPTDIR/extract-mmtests.pl --format script -n $TEST $EXTRACT_ARGS --print-plot"
+	[ "$PLOTTYPE_OVERRIDE" != "" ] && EXTRACT_CMD+=" --plot-type $PLOTTYPE_OVERRIDE"
 	[ "$GRAPH_DEBUG" = "yes" ] && echo "TRACE: Extract: $EXTRACT_CMD"
-	eval $EXTRACT_CMD | \
-		grep -v nan 		| \
-		sed -e 's/_/\\\\_/g'	  \
+	[ "$METRIC" != "" -a "$SUBHEADING" = "" ] && EXTRACT_CMD+=" --sub-heading $METRIC"
+	eval $EXTRACT_CMD				| \
+		grep -v nan 				| \
+		sed -e 's/_/\\\\_/g' -e "s/$METRIC-//"	  \
 		> $PLOTFILE || exit
 
 	if [ "$SORT_SAMPLES" = "yes" ]; then

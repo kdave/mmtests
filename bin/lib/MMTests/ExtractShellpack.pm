@@ -43,7 +43,7 @@ sub initialise() {
 	$self->{_PlotYaxis} = $yamlMap{'PlotYaxis'} if defined($yamlMap{'PlotYaxis'});
 	$self->{_PlotType}  = $yamlMap{'PlotType'}  if defined($yamlMap{'PlotType'});
 
-	printVerbose("Init    module " . $self->{_ModuleName} . " summarise " . $yamlMap{'summarise'} . "\n");
+	printVerbose("Init    module " . $self->{_ModuleName} . " summarise " . $yamlMap{'summarise'} . " plot " . $self->{_PlotType} . "\n");
 	$self->SUPER::initialise($subHeading);
 }
 

@@ -6,12 +6,12 @@ metrics:
   - op
 
 summarise: Subselection
-PlotXaxis: Type Time
-PlotType: operation-candlesticks
+PlotXaxis: Clients
+PlotType: client-candlesticks
 DecimalPlaces: 4
 
 loadfile:
-  title: Elapsed Time
+  title: Loadfile Completion Times
   units: TIME_MSECONDS
 
 tput:

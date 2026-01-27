@@ -238,7 +238,7 @@ sub _time_to_elapsed {
 }
 
 sub printPlot() {
-	my ($self, $subheading) = @_;
+	my ($self, $subheading, $plottype) = @_;
 	my $fieldLength = $self->{_PlotLength};
 
 	print "Unhandled data type for plotting.\n";

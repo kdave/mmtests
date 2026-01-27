@@ -25,7 +25,7 @@ use File::Slurp;
 my ($opt_verbose);
 my ($opt_help, $opt_manual);
 my ($opt_reportDirectory, $opt_monitor);
-my ($opt_printHeader, $opt_printPlot, $opt_printType, $opt_printJSON);
+my ($opt_printHeader, $opt_printPlot, $opt_plotType, $opt_printType, $opt_printJSON);
 my ($opt_subheading, $opt_format);
 my ($opt_names, $opt_benchmark, $opt_altreport);
 GetOptions(
@@ -35,6 +35,7 @@ GetOptions(
 	'--print-type'		=> \$opt_printType,
 	'--print-header'	=> \$opt_printHeader,
 	'--print-plot'		=> \$opt_printPlot,
+	'--plot-type=s'		=> \$opt_plotType,
 	'--print-json'		=> \$opt_printJSON,
 	'--print-monitor=s'	=> \$opt_monitor,
 	'--sub-heading=s'	=> \$opt_subheading,
@@ -106,7 +107,7 @@ if (defined $opt_monitor) {
 	}
 	if ($opt_printPlot) {
 		foreach my $monitorModule (@monitorModules) {
-			$monitorModule->printPlot($opt_subheading);
+			$monitorModule->printPlot($opt_subheading, $opt_plotType);
 			print "\n";
 		}
 		exit;
@@ -168,7 +169,7 @@ if ($opt_printJSON) {
 foreach my $extractModule (@extractModules) {
 	$extractModule->printReportTop();
 	if ($opt_printPlot) {
-		$extractModule->printPlot($opt_subheading);
+		$extractModule->printPlot($opt_subheading, $opt_plotType);
 	} else {
 		$extractModule->printFieldHeaders() if $opt_printHeader;
 		$extractModule->printReport();
