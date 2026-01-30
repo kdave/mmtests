@@ -153,6 +153,11 @@ while [ "$1" != "" ]; do
 		SUBHEADING="$2"
 		shift 2
 		;;
+	--print-monitor)
+		EXTRACT_ARGS+=" $1 $2"
+		PRINT_MONITOR=yes
+		shift 2
+		;;
 	*)
 		echo $1 | grep -q ' '
 		if [ $? -eq 0 ]; then
@@ -175,7 +180,7 @@ lookup_metric() {
 }
 
 lookup_type() {
-	if [ ! -e $SHELLPACK_YAML ]; then
+	if [ "$PRINT_MONITOR" = "yes" -o ! -e $SHELLPACK_YAML ]; then
 		TYPE=`$SCRIPTDIR/extract-mmtests.pl --format script -n $TEST $EXTRACT_ARGS --print-type`
 		XLABEL=`echo $TYPE | cut -d, -f2`
 		YLABEL=`echo $TYPE | cut -d, -f3`

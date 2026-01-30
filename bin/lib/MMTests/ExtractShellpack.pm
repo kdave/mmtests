@@ -38,7 +38,7 @@ sub initialise() {
 
 	# Set graphing options specified by YAML
 	$self->{_PlotXaxis} = $self->{_PlotYaxis} = "UNKNOWN";
-	$self->{_PlotType} = "candlesticks";
+	$self->{_PlotType} = "lines";
 	$self->{_PlotXaxis} = $yamlMap{'PlotXaxis'} if defined($yamlMap{'PlotXaxis'});
 	$self->{_PlotYaxis} = $yamlMap{'PlotYaxis'} if defined($yamlMap{'PlotYaxis'});
 	$self->{_PlotType}  = $yamlMap{'PlotType'}  if defined($yamlMap{'PlotType'});
