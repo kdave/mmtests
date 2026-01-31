@@ -109,10 +109,6 @@ config-io-fio-seqread-doublemem-4k-4t
 config-io-fio-sync-maxrandwrite
 config-io-fsmark-small-file-stream
 config-io-fsmark-xfsrepair
-config-io-paralleldd-read-large
-config-io-paralleldd-read-large-multi
-config-io-paralleldd-read-small
-config-io-paralleldd-read-small-multi
 config-io-trunc
 config-io-xfsrepair
 config-memdb-redis-benchmark-large
@@ -123,16 +119,7 @@ config-memdb-redis-memtier-medium
 config-memdb-redis-memtier-small
 config-pagereclaim-stutterp
 config-pagereclaim-stutterp-noreaders
-config-speccpu2017-rate-parallel-full
-config-speccpu2017-rate-parallel-half
-config-speccpu2017-rate-parallel-quarter
-config-speccpu2017-speed
-config-speccpu2017-speed-parallel-full
-config-speccpu2017-speed-parallel-half
-config-speccpu2017-speed-parallel-quarter
-config-workload-cyclictest-fine-kernel-build
 config-workload-cyclictest-histogram-kernel-build
-config-workload-cyclictest-kernel-build
 config-workload-gitcheckout
 config-workload-kernbench
 config-workload-kvmstart-memhog-frag-fio-randread
@@ -149,9 +136,6 @@ config-workload-thpchallenge-fio-madvhugepage
 config-workload-thpchallenge-kernel-build
 config-workload-thpchallenge-kernel-build-defrag
 config-workload-thpchallenge-kernel-build-madvhugepage
-config-workload-unixbench-io-fsbuffer
-config-workload-unixbench-io-fsdisk
-config-workload-unixbench-io-fstime
 config-workload-will-it-scale-io-processes
 config-workload-will-it-scale-io-threads
 "
@@ -402,7 +386,6 @@ for CONFIG in $LIMITMEM_CONFIGS; do
 done
 
 TMPFS_CONFIGS="
-config-io-paralleldd-read-small
 config-io-dbench4-async
 config-pagereclaim-stutterp
 "

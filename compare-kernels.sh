@@ -1055,29 +1055,6 @@ for SUBREPORT in $REPORTS; do
 				plain graph-$SUBREPORT-$HEADING
 			done
 			;;
-		cyclictest-fine-*)
-			eval $GRAPH_PNG --wide --logY --title \"$SUBREPORT Latency\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING
-			eval $GRAPH_PNG --wide --logX --logY --title \"$SUBREPORT Latency sorted\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING-sorted --sort-samples-reverse
-			eval $GRAPH_PNG --very-large --logY --title \"$SUBREPORT Latency sorted\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING-sorted-percentage --sort-samples --sort-percentages 1 --rotate-xaxis
-			eval $GRAPH_PNG --very-large --logY --title \"$SUBREPORT Latency sorted\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING-sorted-percentage-tail --sort-samples --sort-percentages 1 --xrange 99:100 --xtics 0.1 --rotate-xaxis
-			eval $GRAPH_PNG --very-large --logY --title \"$SUBREPORT Latency sorted last 1%\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING-sorted-percentage-tail-99-100 --sort-samples --sort-percentages 1 --xrange 99:100 --xtics 0.1 --rotate-xaxis
-			eval $GRAPH_PNG --very-large --title \"$SUBREPORT Latency sorted 95-99.9%\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING-sorted-percentage-tail-95-99 --sort-samples --sort-percentages 1 --xrange 95:99.9 --xtics 0.5 --rotate-xaxis
-			echo "<tr>"
-			plain graph-$SUBREPORT-$HEADING
-			echo "</tr>"
-			echo "<tr>"
-			plain graph-$SUBREPORT-$HEADING-sorted
-			echo "</tr>"
-			echo "<tr>"
-			plain graph-$SUBREPORT-$HEADING-sorted-percentage
-			echo "</tr>"
-			echo "<tr>"
-			plain graph-$SUBREPORT-$HEADING-sorted-percentage-tail-99-100
-			echo "</tr>"
-			echo "<tr>"
-			plain graph-$SUBREPORT-$HEADING-sorted-percentage-tail-95-99
-			echo "</tr>"
-			;;
 		pmqtest-pinned|pmqtest-unbound)
 			for HEADING in Min Max Avg; do
 				eval $GRAPH_PNG --title \"$SUBREPORT Latency $HEADING\" --sub-heading $HEADING --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING
