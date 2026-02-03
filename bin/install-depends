@@ -22,6 +22,48 @@ sub which {
 	return $line;
 }
 
+my $recent_failure_record = $ENV{"HOME"} . "/.mmtests-install-package-failures";
+my $fail_retry = 180;
+my %recent_failures;
+sub read_recent_failures {
+	if (! -e $recent_failure_record) {
+		return;
+	}
+
+	my $now = time();
+	open(INPUT, $recent_failure_record);
+	while (<INPUT>) {
+		next if ($_ !~ /@@[0-9]+$/);
+		my ($package, $last) = split(/@@/);
+		chomp($last);
+		if ($last + $fail_retry > time()) {
+			$recent_failures{$package} = $last;
+		}
+	}
+	close(INPUT);
+}
+
+sub write_recent_failures {
+	if (scalar %recent_failures == 0) {
+		if (-e $recent_failure_record) {
+			unlink($recent_failure_record);
+		}
+		return;
+	}
+
+	if (open(OUTPUT, ">$recent_failure_record")) {
+		foreach my $key (keys %recent_failures) {
+			print OUTPUT $key . "@@" . "$recent_failures{$key}\n";
+		}
+		close OUTPUT;
+	}
+}
+
+read_recent_failures();
+END {
+	write_recent_failures();
+}
+
 my %package_map = (
 	"debian::acl-devel"			=> "libacl1-dev",
 	"debian::attr-devel"			=> "libattr1-dev",
@@ -241,11 +283,18 @@ foreach my $package (@ARGV) {
 		$allow_downgrade{"suse"} = "--allow-downgrade";
 	}
 
+	if (defined($recent_failures{$package}) && $recent_failures{$package} + $fail_retry > time()) {
+		print "WARNING: Skipping '$package' installation due to recent installation failure.\n";
+		next;
+	}
+
 	if (system("$check_package{$distro} $package >/dev/null 2>&1") != 0) {
 		if (system("$noninteractive_install{$distro} $sudo $package_bin{$distro} $force_install{$distro} $package") != 0) {
 			if (system("$noninteractive_install{$distro} $sudo $package_bin{$distro} $allow_downgrade{$distro} $force_install{$distro} $package") != 0) {
 				print("WARNING: Failed to cleanly install package $package for distro $distro\n");
+				$recent_failures{$package} = time();
 				$exit_code = -1;
+				next;
 			}
 		}
 	}
