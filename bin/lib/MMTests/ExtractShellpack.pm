@@ -59,6 +59,7 @@ sub open_parser() {
 sub extractReport() {
 	my ($self, $reportDir, $opt_subheading, $opt_altreport) = @_;
 	my @ratioOps;
+	my %seenOps;
 	my $fh = $self->open_parser($reportDir, $opt_altreport);
 
 	while (!eof($fh)) {
@@ -68,8 +69,9 @@ sub extractReport() {
 		$label .= "-$factorA" if ($factorA ne "" && $factorA ne "_");
 		$label .= "-$factorB" if ($factorB ne "" && $factorB ne "_");
 		$self->addData($label, $interval, $value);
-		if ($extra =~ /^R/) {
+		if ($extra =~ /^R/ && !$seenOps{$label} != 1) {
 			push @ratioOps, $label;
+			$seenOps{$label} = 1;
 		}
 	}
 
