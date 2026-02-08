@@ -187,7 +187,6 @@ lookup_yaml() {
 	SHELLPACK_YAML=$_yaml
 }
 lookup_yaml
-[ "$GRAPH_DEBUG" = "yes" ] && echo "TRACE: Yaml $SHELLPACK_YAML"
 
 EXTRACT_ARGS=`echo "$EXTRACT_ARGS" | sed -e 's/\\$/\\\\$/g'`
 lookup_metric() {
@@ -255,6 +254,7 @@ for TEST in $TEST_LIST; do
 
 	if [ "$GRAPH_DEBUG" = "yes" ]; then
 		echo "TRACE: $SCRIPTDIR/extract-mmtests.pl --format script -n $TEST $EXTRACT_ARGS --print-type"
+		echo "TRACE: YAML     $SHELLPACK_YAML"
 		echo "TRACE: XLABEL   $XLABEL"
 		echo "TRACE: YLABEL   $YLABEL"
 		echo "TRACE: PLOTTYPE $PLOTTYPE"

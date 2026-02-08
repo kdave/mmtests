@@ -250,7 +250,7 @@ if [ "$XLABEL" != "" ]; then
 fi
 if [ "$YLABEL" != "" ]; then
 	YLABEL=`echo $YLABEL | sed -e 's/_/\\\_/g'`
-	echo "set ylabel '$YLABEL'" >> $TEMP
+	echo "set ylabel \"$YLABEL\"" >> $TEMP
 fi
 if [ "$LOGX" = "yes" ]; then
 	echo "set log x 2" >> $TEMP

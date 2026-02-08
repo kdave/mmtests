@@ -1108,7 +1108,8 @@ for SUBREPORT in $REPORTS; do
 			done
 			echo "</tr>"
 			;;
-		libmicro)
+		libmicro*)
+			generate_subtest_graphs 4
 			;;
 		micro)
 			;;

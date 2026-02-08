@@ -4,7 +4,7 @@ metrics:
   - mean95
 
 summarise: Multiops
-PlotXaxis: USecs/Operation
+PlotXaxis: Operation
 PlotType: operation-candlesticks
 DecimalPlaces: 5
 

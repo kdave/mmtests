@@ -29,8 +29,12 @@ sub lookupShellpackRoot($) {
 }
 
 sub loadModule($$$$$) {
-	my ($self, $type, $moduleName, $testName, $subheading, $altreport) = @_;
+	my ($self, $type, $moduleName, $testName, $subheading, $altreport, $opt_format) = @_;
 	my ($altExt);
+
+	if (!defined($opt_format)) {
+		$opt_format="generic";
+	}
 
 	$altExt = "-$altreport" if ($altreport ne "");
 	printVerbose("Loading module $type $moduleName$altExt\n");
@@ -77,7 +81,7 @@ sub loadModule($$$$$) {
 		printVerbose("YAML    config $shellpackConfig\n");
 	}
 	$classInstance->initialise($subheading);
-	$classInstance->setFormat("generic");
+	$classInstance->setFormat($opt_format);
 
 	printVerbose("Loaded  module " . $classInstance->getModuleName() . "\n");
 
