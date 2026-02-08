@@ -6,14 +6,14 @@ metrics:
 
 summarise: Multiops
 preferhigher: true
-PlotXaxis: Clients
-PlotYaxis: Records/sec
+PlotXaxis: Threads
+PlotYaxis: Records/second
 PlotType: client-candlesticks
 
 total_rsec:
-  title: Total Records/sec
-  units: OPS_PER_SEC
+  title: Aggregate Threads Operations
+  units: OPS_PER_SECOND
 
 thread_rsec:
-  title: Per-thread Records/sec
-  units: OPS_PER_SEC
+  title: Per-Thread Operations
+  units: OPS_PER_SECOND

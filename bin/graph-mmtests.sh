@@ -170,9 +170,26 @@ while [ "$1" != "" ]; do
 	esac
 done
 
+lookup_yaml() {
+	SHELLPACK_YAML="$SCRIPTDIR/../shellpack_src/src/$SUBREPORT/shellpack.yaml"
+	[ -e $SHELLPACK_YAML ] && return
+
+	local _subreport=$SUBREPORT
+	local _yaml=$SHELLPACK_YAML
+
+	while [ ! -e $_yaml ]; do
+		if ! [[ $_subreport =~ - ]]; then
+			return
+		fi
+		_subreport=`echo $_subreport | sed 's/\(.*\)-.*/\1/'`
+		_yaml="$SCRIPTDIR/../shellpack_src/src/$_subreport/shellpack.yaml"
+	done
+	SHELLPACK_YAML=$_yaml
+}
+lookup_yaml
+[ "$GRAPH_DEBUG" = "yes" ] && echo "TRACE: Yaml $SHELLPACK_YAML"
+
 EXTRACT_ARGS=`echo "$EXTRACT_ARGS" | sed -e 's/\\$/\\\\$/g'`
-SHELLPACK_YAML="$SCRIPTDIR/../shellpack_src/src/$SUBREPORT/shellpack.yaml"
-[ ! -e $SHELLPACK_YAML ] && SHELLPACK_YAML=""
 lookup_metric() {
 	if [ "$METRIC" = "" -a -e $SHELLPACK_YAML ]; then
 		METRIC=`yq '."default-metric"' $SHELLPACK_YAML | sed -e 's/\"//g'`
@@ -193,12 +210,15 @@ lookup_type() {
 	[ "$PLOTTYPE" = "null" ] && PLOTTYPE=`yq .PlotType $SHELLPACK_YAML 2>/dev/null | sed -e 's/"//g'`
 	[ "$PLOTTYPE" = "" ] && PLOTTYPE="operation-candlesticks"
 
+	YLABEL=
+	YDESC=`yq .$METRIC.title $SHELLPACK_YAML |sed -e 's/"//g'`
+	[ "$YDESC" != "null" ] && YLABEL="$YDESC\\n"
 	YUNITS=`yq .$METRIC.units $SHELLPACK_YAML | sed -e 's/"//g'`
 	if [ "$YUNITS" = "null" ]; then
 		YLABEL="Unknown units .$METRIC.units"
 		return
 	fi
-	YLABEL=`$SCRIPTDIR/lookup-unit-label $YUNITS`
+	YLABEL+=`$SCRIPTDIR/lookup-unit-label $YUNITS`
 }
 
 lookup_title() {

@@ -15,10 +15,10 @@ loadfile:
   units: TIME_MSECONDS
 
 tput:
-  title: Throughput
+  title: Throughput from T0->Tn
   units: MBYTES_PER_SECOND
 
 op:
-  title: Operation Latency
+  title: Syscall Operation Latency
   units: TIME_MSECONDS
   summarise: Singleops

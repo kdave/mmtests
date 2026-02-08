@@ -569,7 +569,7 @@ generate_basic_single() {
 	EXTRA="$2"
 
 	if [ "$TITLE" = "" ]; then
-		TITLE="SUBREPORT"
+		TITLE="$SUBREPORT"
 	fi
 	if [ "$EXTRA" != "" ]; then
 		EXTRA_FILENAME=`echo $EXTRA | sed -e 's/--/-/g' | sed -e 's/ /-/g'`
@@ -1063,8 +1063,8 @@ for SUBREPORT in $REPORTS; do
 			;;
 		dbench)
 			echo "<tr>"
-			generate_basic_single "$SUBREPORT Completion times" "--logX"
-			generate_basic_single "$SUBREPORT Completion times" "--logX --logY"
+			generate_basic_single "$SUBREPORT Loadfile Completion Times" "--sub-heading loadfile --logX"
+			generate_basic_single "$SUBREPORT Loadfile Completion Times" "--sub-heading loadfile --logX --logY"
 			generate_client_trans_graphs "" "Sample" "loadfile"
 			echo "</tr>"
 			;;
