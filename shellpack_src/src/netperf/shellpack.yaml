@@ -1,33 +1,38 @@
-default-metric: ipv4-tcp-rr
+default-metric: tcpstream-send
 
 metrics:
-  - tcprr
-  - tcpstream
-  - udprr
-  - udpstream
-  - unix
+  - tcpstream-send
+  - udpstream-send
+  - udpstream-recv
+  - tcprr-send
+  - udprr-send
+  - streamstream-send
 
 summarise: Multiops
 preferhigher: true
-PlotXaxis: MBit/sec
+PlotXaxis: Buffer Size Bytes
 PlotType: operation-candlesticks
 
-tcprr:
-  title: TCP RR
+tcprr-send:
+  title: NetPerf TCP RR
   units: MBITS_PER_SECOND
 
-tcpstream:
-  title: TCP STREAM
+tcpstream-send:
+  title: NetPerf TCP STREAM
   units: MBITS_PER_SECOND
 
-udprr:
-  title: UDP RR
+udprr-send:
+  title: NetPerf UDP RR
   units: MBITS_PER_SECOND
 
-udpstream:
-  title: UDP STREAM
+udpstream-send:
+  title: NetPerf UDP STREAM
   units: MBITS_PER_SECOND
 
-unix:
-  title: UNIX Socket
+udpstream-recv:
+  title: NetPerf UDP STREAM
+  units: MBITS_PER_SECOND
+
+streamstream-send:
+  title: NetPerf UNIX STREAM
   units: MBITS_PER_SECOND

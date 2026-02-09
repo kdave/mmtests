@@ -150,6 +150,7 @@ while [ "$1" != "" ]; do
 	--sub-heading)
 		EXTRACT_ARGS+=" $1 $2"
 		SUBHEADING="$2"
+		[ "$METRIC" = "" ] && METRIC=$SUBHEADING
 		shift 2
 		;;
 	--print-monitor)
