@@ -1,5 +1,4 @@
 #!/bin/bash
-set ${MMTESTS_SH_DEBUG:-+x}
 
 SCRIPT=`basename $0 | sed -e 's/\./\\\./'`
 SCRIPTDIR=`echo $0 | sed -e "s/$SCRIPT//"`
@@ -210,14 +209,19 @@ lookup_type() {
 	[ "$PLOTTYPE" = "" ] && PLOTTYPE="operation-candlesticks"
 
 	YLABEL=
-	YDESC=`yq .$METRIC.title $SHELLPACK_YAML |sed -e 's/"//g'`
+	YDESC=`yq .\"$METRIC\".title $SHELLPACK_YAML |sed -e 's/"//g'`
 	[ "$YDESC" != "null" ] && YLABEL="$YDESC\\n"
-	YUNITS=`yq .$METRIC.units $SHELLPACK_YAML | sed -e 's/"//g'`
+	YUNITS=`yq .\"$METRIC\".units $SHELLPACK_YAML | sed -e 's/"//g'`
 	if [ "$YUNITS" = "null" ]; then
 		YLABEL="Unknown units .$METRIC.units"
 		return
 	fi
-	YLABEL+=`$SCRIPTDIR/lookup-unit-label $YUNITS`
+	UNIT_LABEL=`$SCRIPTDIR/lookup-unit-label $YUNITS`
+
+	if [ "$YDESC" = "$UNIT_LABEL" ]; then
+		YLABEL=""
+	fi
+	YLABEL+="$UNIT_LABEL"
 }
 
 lookup_title() {
@@ -230,7 +234,7 @@ lookup_title() {
 		return
 	fi
 
-	TITLE=`yq .$METRIC.title $SHELLPACK_YAML | sed -e 's/"//g'`
+	TITLE=`yq .\"$METRIC\".title $SHELLPACK_YAML | sed -e 's/"//g'`
 	[ "$TITLE" = "null" ] && TITLE="Unknown Title for $SUBREPORT.$METRIC"
 }
 
@@ -274,9 +278,10 @@ for TEST in $TEST_LIST; do
 	[ "$PLOTTYPE_OVERRIDE" != "" ] && EXTRACT_CMD+=" --plot-type $PLOTTYPE_OVERRIDE"
 	[ "$GRAPH_DEBUG" = "yes" ] && echo "TRACE: Extract: $EXTRACT_CMD"
 	[ "$METRIC" != "" -a "$SUBHEADING" = "" ] && EXTRACT_CMD+=" --sub-heading $METRIC"
-	eval $EXTRACT_CMD				| \
-		grep -v nan 				| \
-		sed -e 's/_/\\\\_/g' -e "s/$METRIC-//"	  \
+	METRIC_ESC=`echo $METRIC | sed -e 's/\//\\\\\\//g'`
+	eval $EXTRACT_CMD					| \
+		grep -v nan 					| \
+		sed -e 's/_/\\\\_/g' -e "s/$METRIC_ESC-//"	  \
 		> $PLOTFILE || exit
 
 	if [ "$SORT_SAMPLES" = "yes" ]; then

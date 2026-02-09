@@ -430,7 +430,6 @@ generate_client_trans_graphs() {
 		else
 			LABEL="$SUBREPORT transactions $CLIENT clients"
 		fi
-		echo $GRAPH_PNG --sub-heading $SUBHEADING$CLIENT\$ --plottype lines 1>&2
 		eval $GRAPH_PNG --sub-heading $SUBHEADING$CLIENT\$ --plottype lines --title \"$LABEL\" --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-trans-${CLIENT_FILENAME} --x-label \"$XLABEL\" --with-smooth
 		eval $GRAPH_PNG --sub-heading $SUBHEADING$CLIENT\$ --plottype lines --title \"$LABEL sorted\" --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-trans-${CLIENT_FILENAME}-sorted --sort-samples-reverse --x-label \"Sorted samples\"
 		plain graph-${SUBREPORT}-trans-${CLIENT_FILENAME}

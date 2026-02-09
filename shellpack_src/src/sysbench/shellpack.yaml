@@ -5,9 +5,9 @@ metrics:
 
 summarise: Multiops
 preferhigher: true
-PlotXaxis: Transactions/second
+PlotXaxis: Clients
 PlotType: operation-candlesticks
 
 txn/sec:
-  title: Transactions/second
+  title: PGBench Transactions
   units: TRANS_PER_SECOND
