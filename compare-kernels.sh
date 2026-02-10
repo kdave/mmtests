@@ -1207,14 +1207,6 @@ for SUBREPORT in $REPORTS; do
 				echo "</tr>"
 			done
 			;;
-		vdsotest)
-			for HEADING in syscall vdso; do
-				eval $GRAPH_PNG --wide --title \"$SUBREPORT $HEADING\" --sub-heading $HEADING --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-${HEADING}
-				echo "<tr>"
-				plain graph-$SUBREPORT-$HEADING
-				echo "</tr>"
-			done
-			;;
 		tbench)
 			echo "<tr>"
 			generate_basic_single "$SUBREPORT Throughput" "--logX"
