@@ -1,22 +1,22 @@
-default-metric: elapsed
+default-metric: Elapsed
 
 metrics:
-  - user
-  - system
-  - elapsed
+  - User
+  - System
+  - Elapsed
 
 summarise: Multiops
-PlotXaxis: Type Time
+PlotXaxis: NAS Workload
 PlotType: operation-candlesticks
 
-elapsed:
+Elapsed:
   title: Elapsed Time
   units: TIME_SECONDS
 
-user:
+User:
   title: User CPU Time
   units: TIME_SECONDS
 
-system:
+System:
   title: System CPU Time
   units: TIME_SECONDS

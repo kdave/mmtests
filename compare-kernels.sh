@@ -750,10 +750,6 @@ for SUBREPORT in $REPORTS; do
 		echo $SUBREPORT System CPU Time
 		compare-mmtests.pl -d . -b ${SUBREPORT} -n $KERNEL_LIST $FORMAT_CMD --sub-heading System
 		echo
-
-		echo $SUBREPORT NAS Time
-		compare-mmtests.pl -d . -b ${SUBREPORT} -n $KERNEL_LIST $FORMAT_CMD --sub-heading NAS
-		echo
 		;;
 	netperf-*)
 		echo $SUBREPORT Default report
