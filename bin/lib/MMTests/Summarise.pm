@@ -194,8 +194,13 @@ sub printPlot() {
 		}
 
 		$nr_headings++;
-		if ($self->{_PlotType} =~ /simple.*/) {
+		if ($self->{_PlotType} =~ /simple.*/ || $self->{_PlotType} eq "lines") {
 			my $fake_samples = 0;
+			if ($self->{_PlotType} eq "lines") {
+				$niceheading .= "-";
+			} else {
+				$niceheading = "";
+			}
 
 			if ($self->{_PlotType} =~ /simple-samples/) {
 				$fake_samples = 1;
@@ -207,7 +212,7 @@ sub printPlot() {
 					$stamp = $samples;
 				}
 
-				print("$stamp $units[$samples]\n");
+				print("$niceheading$stamp $units[$samples]\n");
 			}
 		} elsif ($self->{_PlotType} eq "candlesticks") {
 			printf "%-${fieldLength}s ", $niceheading;

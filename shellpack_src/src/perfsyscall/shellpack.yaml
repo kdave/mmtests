@@ -1,13 +1,13 @@
-default-metric: usecs-op
+default-metric: usecs/syscall
 
 metrics:
-  - usecs-op
+  - usecs/syscall
 
 summarise: Multiops
-PlotXaxis: USecs/Operation
-PlotType: operation-candlesticks
+PlotXaxis: Iteration
+PlotType: lines
 DecimalPlaces: 4
 
-usecs-op:
-  title: USecs/Operation
+usecs/syscall:
+  title: Syscall Duration
   units: TIME_USECONDS

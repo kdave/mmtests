@@ -4,4 +4,4 @@ SHELLPACK_BIN=$SHELLPACK_ROOT/../../parsers
 
 LOGDIR=${1:-`pwd`}
 cd $LOGDIR || exit 1
-$SHELLPACK_BIN/line-parse-results `pwd` 'usecs/op' usecs-op 1
+$SHELLPACK_BIN/line-parse-results `pwd` 'usecs/op' usecs/syscall 1

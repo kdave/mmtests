@@ -205,7 +205,7 @@ lookup_type() {
 	fi
 
 	XLABEL=`yq '.PlotXaxis' $SHELLPACK_YAML | sed -e 's/"//g'`
-	PLOTTYPE=`yq .$METRIC.PlotType $SHELLPACK_YAML 2>/dev/null | sed -e 's/"//g'`
+	PLOTTYPE=`yq .\"$METRIC\".PlotType $SHELLPACK_YAML 2>/dev/null | sed -e 's/"//g'`
 	[ "$PLOTTYPE" = "null" ] && PLOTTYPE=`yq .PlotType $SHELLPACK_YAML 2>/dev/null | sed -e 's/"//g'`
 	[ "$PLOTTYPE" = "" ] && PLOTTYPE="operation-candlesticks"
 
