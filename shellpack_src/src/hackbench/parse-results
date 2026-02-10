@@ -17,6 +17,6 @@ cd $LOGDIR || exit 1
 for NR_JOBS in `ls hackbench-*-1 | awk -F - '{print $2}'`; do
 	for ITERATION in `\ls hackbench-$NR_JOBS-* | cut -f3 -d- | sort -n`; do
 		VALUE=`grep "Total time:" hackbench-$NR_JOBS-$ITERATION | awk '{print $3}'`
-		echo -e "Time\t$NR_JOBS\t_\t$ITERATION\t$VALUE\t_"
+		echo -e "time\t$NR_JOBS\t_\t$ITERATION\t$VALUE\t_"
 	done
 done | sort -k1,1 -k2,2n

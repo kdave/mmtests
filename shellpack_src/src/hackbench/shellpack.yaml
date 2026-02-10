@@ -10,10 +10,10 @@ aliases:
   - hackbench-thread-sockets
 
 summarise: Multiops
-PlotXaxis: Time
+PlotXaxis: time
 PlotType: operation-candlesticks
 DecimalPlaces: 4
 
 time:
-  title: Time
+  title: Time Communicate Between Groups
   units: TIME_SECONDS

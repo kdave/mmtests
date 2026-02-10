@@ -6,6 +6,7 @@ our @EXPORT = qw(LABEL_TIME_NSECONDS LABEL_TIME_USECONDS LABEL_TIME_MSECONDS LAB
 
 use constant LABEL_TIME_NSECONDS	=> "Time (nanoseconds)";
 use constant LABEL_TIME_USECONDS	=> "Time (microseconds)";
+use constant LABEL_TIME_USECONDS_PER_OP	=> "Microseconds/op";
 use constant LABEL_TIME_MSECONDS	=> "Time (milliseconds)";
 use constant LABEL_TIME_SECONDS		=> "Time (seconds)";
 use constant LABEL_TIME_PERCENTAGE	=> "Time Percentage";
