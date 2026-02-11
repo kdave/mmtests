@@ -36,15 +36,14 @@ sub extractReport($$$) {
 				my $nr_samples=0;
 				open INPUT,
 				"$reportDir/results/replayed_$jobname\_startup/repetition0/$scheduler-$pattern-single_times.txt"
-				|| die "Failed to find time data file
-				for $jobname\n";
+				|| die "Failed to find time data file for $jobname\n";
 
 				while (!eof(INPUT)) {
 					my $line = <INPUT>;
 					chomp($line);
 					$line =~ s/^\s+//;
 					$nr_samples++;
-					print "$jobname\t$pattern\t_\t$nr_samples\t$line\t_\n";
+					print "time-$jobname\t$pattern\t_\t$nr_samples\t$line\t_\n";
 				}
 				close INPUT;
 			}
