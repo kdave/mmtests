@@ -509,7 +509,7 @@ generate_subheading_graphs() {
 		if [ $((COUNT%$WRAP)) -eq 0 ]; then
 			echo "<tr>"
 		fi
-		eval $GRAPH_PNG --title \"$SUBREPORT $HEADING\" $SUBTEST_ARG --sub-heading \"$HEADING\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING_FILENAME
+		eval $GRAPH_PNG --title \"$SUBREPORT $HEADING\" $SUBTEST_ARG --sub-heading \"^$HEADING\$\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING_FILENAME
 		plain graph-$SUBREPORT-$HEADING_FILENAME
 		if [ $((COUNT%$WRAP)) -eq $((WRAP-1)) ]; then
 			echo "</tr>"
@@ -993,12 +993,6 @@ for SUBREPORT in $REPORTS; do
 				plain graph-$SUBREPORT-$HEADING
 			done
 			;;
-		pmqtest-pinned|pmqtest-unbound)
-			for HEADING in Min Max Avg; do
-				eval $GRAPH_PNG --title \"$SUBREPORT Latency $HEADING\" --sub-heading $HEADING --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING
-				plain graph-$SUBREPORT-$HEADING
-			done
-			;;
 		dbench)
 			echo "<tr>"
 			generate_basic_single "$SUBREPORT Loadfile Completion Times" "--sub-heading loadfile --logX"
@@ -1025,6 +1019,9 @@ for SUBREPORT in $REPORTS; do
 			generate_basic "$SUBREPORT" "--logX"
 			;;
 		highalloc)
+			;;
+		iperf3*)
+			generate_subheading_graphs 3 "`$EXTRACT_CMD -n $KERNEL $SUBTEST_ARG | awk '{print $1}' | sort -t- -k1,1 -k4,4n -k3,3n -k2,2n -u`" ""
 			;;
 		kernbench)
 			echo "<tr>"
@@ -1083,6 +1080,12 @@ for SUBREPORT in $REPORTS; do
 			echo "</tr>"
 
 			generate_client_trans_graphs
+			;;
+		pmqtest-pinned|pmqtest-unbound)
+			for HEADING in Min Max Avg; do
+				eval $GRAPH_PNG --title \"$SUBREPORT Latency $HEADING\" --sub-heading $HEADING --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING
+				plain graph-$SUBREPORT-$HEADING
+			done
 			;;
 		pistress)
 			;;

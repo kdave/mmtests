@@ -150,7 +150,7 @@ while [ "$1" != "" ]; do
 	--sub-heading)
 		EXTRACT_ARGS+=" $1 $2"
 		SUBHEADING="$2"
-		[ "$METRIC" = "" ] && METRIC=$SUBHEADING
+		[ "$METRIC" = "" ] && METRIC=`echo $SUBHEADING | sed -e 's/[\^\$]//g'`
 		shift 2
 		;;
 	--print-monitor)
@@ -214,8 +214,11 @@ lookup_type() {
 	[ "$YDESC" != "null" ] && YLABEL="$YDESC\\n"
 	YUNITS=`yq .\"$METRIC\".units $SHELLPACK_YAML | sed -e 's/"//g'`
 	if [ "$YUNITS" = "null" ]; then
-		YLABEL="Unknown units .$METRIC.units"
-		return
+		YUNITS=`yq .units $SHELLPACK_YAML | sed -e 's/"//g'`
+		if [ "$YUNITS" = "null" ]; then
+			YLABEL="Unknown units .$METRIC.units"
+			return
+		fi
 	fi
 	UNIT_LABEL=`$SCRIPTDIR/lookup-unit-label $YUNITS`
 

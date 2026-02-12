@@ -8,11 +8,10 @@ summarise: Multiops
 preferhigher: true
 PlotXaxis: MBit/sec
 PlotType: operation-candlesticks
+units: MBITS_PER_SECOND
 
 tcp:
   title: TCP
-  units: MBITS_PER_SECOND
 
 udp:
   title: UDP
-  units: MBITS_PER_SECOND
