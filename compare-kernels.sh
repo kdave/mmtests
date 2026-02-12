@@ -492,24 +492,24 @@ restore_cache_mmtests() {
 	unset SAVE_CACHE_MMTESTS
 }
 
-generate_subtest_graphs() {
+generate_subheading_graphs() {
 	COUNT=-1
 	WRAP=$1
-	if [ "$WRAP" = "" ]; then
-		WRAP=3
-	fi
-	SUBTEST_LIST=$2
-	if [ "$SUBTEST_LIST" = "" ]; then
-		SUBTEST_LIST=`eval $EXTRACT_CMD -n $KERNEL | awk '{print $1}' | sort | uniq | sed -e 's/ /@/g'`
-	fi
+	SUBHEADING_LIST=$2
+	SUBTEST=$3
+	SUBTEST_ARG=
+	[ "$WRAP" = ""		  ] && WRAP=3
+	[ "$SUBTEST" != ""	  ] && SUBTEST_ARG="-a $SUBTEST"
+	[ "$SUBHEADING_LIST" = "" ] && SUBHEADING_LIST=`eval $EXTRACT_CMD -n $KERNEL $SUBTEST_ARG | awk '{print $1}' | sort -u`
+
 	save_cache_mmtests
-	for HEADING in $SUBTEST_LIST; do
-		HEADING_FILENAME=`echo $HEADING | sed -e 's/:/__/g'`
+	for HEADING in $SUBHEADING_LIST; do
+		HEADING_FILENAME=`echo $HEADING | sed -e 's/:/__/g' -e 's/\///'`
 		COUNT=$((COUNT+1))
 		if [ $((COUNT%$WRAP)) -eq 0 ]; then
 			echo "<tr>"
 		fi
-		eval $GRAPH_PNG --title \"$SUBREPORT $HEADING\" --sub-heading \"$HEADING\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING_FILENAME
+		eval $GRAPH_PNG --title \"$SUBREPORT $HEADING\" $SUBTEST_ARG --sub-heading \"$HEADING\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING_FILENAME
 		plain graph-$SUBREPORT-$HEADING_FILENAME
 		if [ $((COUNT%$WRAP)) -eq $((WRAP-1)) ]; then
 			echo "</tr>"
@@ -560,18 +560,19 @@ generate_basic() {
 generate_subheading_trans_graphs() {
 	SUBHEADING_LIST=$1
 	SUBTEST=$2
-	EXTRA=$3
-	if [ "$SUBTEST" = "" ]; then
-		SUBTEST=$SUBREPORT
+	if [ "$SUBTEST" != "" ]; then
+		SUBTEST_ARG="-a $SUBTEST"
+	fi
+
+	if [ "$SUBHEADING_LIST" = "" ]; then
+		SUBHEADING_LIST=`eval $EXTRACT_CMD $SUBTEST_ARG -n $KERNEL | awk '{print $1}' | sort -u`
 	fi
 
 	for SUBHEADING in $SUBHEADING_LIST; do
 		echo "<tr>"
-		eval $GRAPH_PNG -a $SUBTEST --title \"$SUBTEST $SUBHEADING\" $EXTRA --sub-heading $SUBHEADING  --output $OUTPUT_DIRECTORY/graph-$SUBTEST-$SUBHEADING --x-label Time --with-smooth
-		eval $GRAPH_PNG -a $SUBTEST --title \"$SUBTEST $SUBHEADING sorted\" $EXTRA --sub-heading $SUBHEADING  --output $OUTPUT_DIRECTORY/graph-$SUBTEST-$SUBHEADING-sorted --sort-samples-reverse --x-label \"Sorted samples\"
+		eval $GRAPH_PNG $SUBTEST_ARG --title \"$SUBTEST $SUBHEADING\" $EXTRA --sub-heading $SUBHEADING  --output $OUTPUT_DIRECTORY/graph-$SUBTEST-$SUBHEADING --x-label Time --with-smooth
 		plain graph-$SUBTEST-$SUBHEADING
 		plain graph-$SUBTEST-$SUBHEADING-smooth
-		plain graph-$SUBTEST-$SUBHEADING-sorted
 		echo "</tr>"
 	done
 }
@@ -961,11 +962,10 @@ for SUBREPORT in $REPORTS; do
 		adrestia-wakeup-*)
 			;;
 		aim9)
-			generate_subtest_graphs 2
+			generate_subheading_graphs 2 "" ""
 			;;
 		bonniepp)
-			SUBTEST_LIST=`$EXTRACT_CMD -n $KERNEL | awk '{print $1}' | sort -u`
-			generate_subtest_graphs
+			generate_subheading_graphs 3 "" ""
 			;;
 		autonumabench)
 			echo "<tr>"
@@ -985,7 +985,7 @@ for SUBREPORT in $REPORTS; do
 			echo "</tr>"
 			;;
 		blogbench)
-			generate_subtest_graphs
+			generate_subheading_graphs 2 "" ""
 			;;
 		cyclictest)
 			for HEADING in Max Avg; do
@@ -1010,7 +1010,7 @@ for SUBREPORT in $REPORTS; do
 			generate_basic "$SUBREPORT" "--logX"
 			;;
 		fio)
-			generate_subheading_trans_graphs "latency-read latency-write" "latency" "--logY"
+			generate_subheading_graphs 2 "" "latency"
 			;;
 		fsmark-threaded|fsmark-single)
 			generate_client_trans_graphs "`$COMPARE_BARE_CMD | grep ^Min | awk '{print $2}' | sort -n | uniq`"
@@ -1047,7 +1047,7 @@ for SUBREPORT in $REPORTS; do
 			echo "</tr>"
 			;;
 		libmicro*)
-			generate_subtest_graphs 4
+			generate_subheading_graphs 4 "" ""
 			;;
 		micro)
 			;;
@@ -1119,7 +1119,7 @@ for SUBREPORT in $REPORTS; do
 		specjbb2013)
 			;;
 		sqlite)
-			generate_subheading_trans_graphs "Trans" "sqlite"
+			generate_subheading_graphs 2 "" ""
 			;;
 		stockfish)
 			echo "<tr>"
@@ -1180,16 +1180,6 @@ for SUBREPORT in $REPORTS; do
 						eval $GRAPH_PNG --title \"$SUBREPORT $SUB_WORKLOAD $ADDRSPACE\" --sub-heading $SUB_WORKLOAD-$ADDRSPACE --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$SUB_WORKLOAD-$ADDRSPACE
 						plain graph-$SUBREPORT-$SUB_WORKLOAD-$ADDRSPACE
 				done
-				echo "</tr>"
-			done
-			;;
-		wptlbflush)
-			for CLIENT in `$COMPARE_BARE_CMD | grep ^Min | awk '{print $2}' | sed -e 's/.*-//' | sort -n | uniq`; do
-				echo "<tr>"
-				eval $GRAPH_PNG -b $SUBREPORT --title \"$SUBREPORT $CLIENT procs\" --sub-heading procs-$CLIENT --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-$CLIENT --with-smooth
-				eval $GRAPH_PNG -b $SUBREPORT --title \"$SUBREPORT $CLIENT procs sorted\" --sub-heading procs-$CLIENT --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-$CLIENT-sorted --sort-samples-reverse
-				smoothover graph-$SUBREPORT-$CLIENT
-				plain graph-$SUBREPORT-$CLIENT-sorted
 				echo "</tr>"
 			done
 			;;
