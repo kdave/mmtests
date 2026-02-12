@@ -585,35 +585,6 @@ generate_basic() {
 	echo "</tr>"
 }
 
-generate_subheading_graphs() {
-	SUBHEADING_LIST=$1
-	WRAP=$2
-	SUBTEST=$3
-	EXTRA=$4
-	if [ "$SUBTEST" = "" ]; then
-		SUBTEST=$SUBREPORT
-	fi
-	if [ "$WRAP" = "" ]; then
-		WRAP=3
-	fi
-
-	COUNT=-1
-	for SUBHEADING in $SUBHEADING_LIST; do
-		COUNT=$((COUNT+1))
-		if [ $((COUNT%$WRAP)) -eq 0 ]; then
-			echo "<tr>"
-		fi
-		eval $GRAPH_PNG -b $SUBTEST --title \"$SUBTEST $SUBHEADING\" $EXTRA --sub-heading $SUBHEADING  --output $OUTPUT_DIRECTORY/graph-$SUBTEST-$SUBHEADING
-		plain graph-$SUBTEST-$SUBHEADING
-		if [ $((COUNT%$WRAP)) -eq $((WRAP-1)) ]; then
-			echo "</tr>"
-		fi
-	done
-	if [ $((COUNT%$WRAP)) -ne $((WRAP-1)) ]; then
-		echo "</tr>"
-	fi
-}
-
 generate_subheading_trans_graphs() {
 	SUBHEADING_LIST=$1
 	SUBTEST=$2
@@ -1042,7 +1013,7 @@ for SUBREPORT in $REPORTS; do
 			echo "</tr>"
 			;;
 		blogbench)
-			generate_subheading_graphs "Read Write"
+			generate_subtest_graphs
 			;;
 		cyclictest)
 			for HEADING in Max Avg; do
