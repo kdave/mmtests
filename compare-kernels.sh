@@ -1092,6 +1092,9 @@ for SUBREPORT in $REPORTS; do
 		redis*)
 			generate_ops_graphs
 			;;
+		saladfork)
+			generate_subheading_graphs 3 "local remote local_v_total" ""
+			;;
 		schbench)
 			;;
 		sembench-sem|sembench-nanosleep|sembench-futex)
