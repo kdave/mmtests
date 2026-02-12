@@ -504,8 +504,7 @@ generate_subtest_graphs() {
 	fi
 	save_cache_mmtests
 	for HEADING in $SUBTEST_LIST; do
-		HEADING=`echo $HEADING | sed -e 's/@/ /g'`
-		HEADING_FILENAME=`echo $HEADING | sed -e 's/ //g'`
+		HEADING_FILENAME=`echo $HEADING | sed -e 's/:/__/g'`
 		COUNT=$((COUNT+1))
 		if [ $((COUNT%$WRAP)) -eq 0 ]; then
 			echo "<tr>"
@@ -519,33 +518,6 @@ generate_subtest_graphs() {
 	if [ $((COUNT%$WRAP)) -ne $((WRAP-1)) ]; then
 		echo "</tr>"
 	fi
-	restore_cache_mmtests
-}
-
-generate_subtest_graphs_sorted() {
-	SUBTEST_LIST=$1
-	if [ "$SUBTEST_LIST" = "" ]; then
-		SUBTEST_LIST=`eval $EXTRACT_CMD -n $KERNEL | awk '{print $1}' | sort | uniq | sed -e 's/ /@/g'`
-	fi
-	save_cache_mmtests
-	for HEADING in $SUBTEST_LIST; do
-		HEADING=`echo $HEADING | sed -e 's/@/ /g'`
-		HEADING_FILENAME=`echo $HEADING | sed -e 's/ //g'`
-		echo "<tr>"
-		eval $GRAPH_PNG --title \"$SUBREPORT $HEADING\" --sub-heading \"$HEADING\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING_FILENAME
-		eval $GRAPH_PNG --title \"$SUBREPORT $HEADING sorted\" --sub-heading \"$HEADING\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING_FILENAME-sorted --sort-samples --sort-percentages 5
-		if [ "$2" != "--logY" ]; then
-			plain graph-$SUBREPORT-$HEADING_FILENAME
-			plain graph-$SUBREPORT-$HEADING_FILENAME-sorted
-		else
-			eval $GRAPH_PNG --title \"$SUBREPORT $HEADING\" --sub-heading \"$HEADING\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING_FILENAME-logY --logY
-			eval $GRAPH_PNG --title \"$SUBREPORT $HEADING sorted\" --sub-heading \"$HEADING\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING_FILENAME-sorted-logY --sort-samples --sort-percentages 5 --logY
-
-			logyover graph-$SUBREPORT-$HEADING_FILENAME
-			logyover graph-$SUBREPORT-$HEADING_FILENAME-sorted
-		fi
-		echo "</tr>"
-	done
 	restore_cache_mmtests
 }
 
@@ -991,9 +963,9 @@ for SUBREPORT in $REPORTS; do
 		aim9)
 			generate_subtest_graphs 2
 			;;
-		bonnie)
-			SUBTEST_LIST=`$EXTRACT_CMD -n $KERNEL | awk '{print $1" "$2}' | sort | uniq | sed -e 's/ /@/g' -e 's/[0-9]//g'`
-			generate_subtest_graphs_sorted "$SUBTEST_LIST" --logY
+		bonniepp)
+			SUBTEST_LIST=`$EXTRACT_CMD -n $KERNEL | awk '{print $1}' | sort -u`
+			generate_subtest_graphs
 			;;
 		autonumabench)
 			echo "<tr>"
