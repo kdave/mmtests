@@ -28,6 +28,7 @@ fi
 # value:	the benchmark measurement
 # extra:	Optional value, currently used to identify a metric+factor for dashboard comparisons
 ITERATION=0
+SORT_FACTORA_PARAM=n
 for FACTORA in `\ls benchlog-* | cut -f2 -d- | sort -u`; do
 	for FACTORB in `\ls benchlog-$FACTORA-* | cut -f3 -d- | sort -u`; do
 		LOG_LIST=
@@ -36,6 +37,9 @@ for FACTORA in `\ls benchlog-* | cut -f2 -d- | sort -u`; do
 			for VALUE in `cat benchlog-$FACTORA-$FACTORB | grep -E "$LPATTERN" | awk "{print \\$\$POS}"`; do
 				((ITERATION++))
 				echo -e "$METRIC\t$FACTORA\t$FACTORB\t$ITERATION\t$VALUE\t_"
+				if ! [[ $FACTORA =~ ^[0-9]+$ ]]; then
+					SORT_FACTORA_PARAM=
+				fi
 			done
 		else
 			for LOG_NR in `\ls benchlog-$FACTORA-$FACTORB-* | cut -f4 -d- | sort -n`; do
@@ -43,7 +47,10 @@ for FACTORA in `\ls benchlog-* | cut -f2 -d- | sort -u`; do
 					((ITERATION++))
 					echo -e "$METRIC\t$FACTORA\t$FACTORB\t$ITERATION\t$VALUE\t_"
 				done
+				if ! [[ $FACTORA =~ ^[0-9]+$ ]]; then
+					SORT_FACTORA_PARAM=
+				fi
 			done
 		fi
 	done
-done | sort -k1,1 -k2,2 -k3,3n -k4,4n
+done | sort -k1,1 -k2,2$SORT_FACTORA_PARAM -k3,3n -k4,4n
