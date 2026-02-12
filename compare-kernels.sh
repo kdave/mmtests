@@ -1135,6 +1135,9 @@ for SUBREPORT in $REPORTS; do
 			plain graph-$SUBREPORT-time
 			echo "</tr>"
 			;;
+		stream)
+			generate_subheading_graphs 4 "" ""
+			;;
 		sysbench)
 			echo "<tr>"
 			eval $GRAPH_PNG --logX                    --title \"$SUBREPORT transactions\" --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}
