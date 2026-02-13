@@ -23,7 +23,7 @@ sub which {
 }
 
 my $recent_failure_record = $ENV{"HOME"} . "/.mmtests-install-package-failures";
-my $fail_retry = 180;
+my $fail_retry = 36000;
 my %recent_failures;
 sub read_recent_failures {
 	if (! -e $recent_failure_record) {
@@ -284,7 +284,9 @@ foreach my $package (@ARGV) {
 	}
 
 	if (defined($recent_failures{$package}) && $recent_failures{$package} + $fail_retry > time()) {
-		print "WARNING: Skipping '$package' installation due to recent installation failure.\n";
+		if ($ENV{"AUTO_PACKAGE_QUIET"} ne "yes") {
+			print "WARNING: Skipping '$package' installation due to recent installation failure.\n";
+		}
 		next;
 	}
 
