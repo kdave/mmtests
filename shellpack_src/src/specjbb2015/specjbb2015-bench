@@ -140,10 +140,8 @@ for PAGES in $SPECJBB_PAGESIZES; do
 	fi
 
 	monitor_post_hook $LOGDIR_RESULTS $P
-	cd $LOGDIR_RESULTS/$PAGES || die "Failed to change to $LOGDIR_RESULTS/$PAGES"
 	tar -cJf $LOGDIR_RESULTS/$PAGES/result.tar.xz result
 	cp `find result/ -name "specjbb2015*.raw"` specjbb2015.log
-	rm -rf result
 done
 
 exit $EXIT_CODE
