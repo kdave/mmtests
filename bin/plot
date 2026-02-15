@@ -36,7 +36,7 @@ while [ $# -gt 0 -a "$FINISHED" != "yes" ]; do
 			YLABEL="$2"
 			shift 2
 			;;
-		--simple|--simple-filter|--simple-samples)
+		--lines|--simple|--simple-filter|--simple-samples)
 			PLOTTYPE="lines"
 			shift
 			;;
@@ -250,7 +250,7 @@ if [ "$XLABEL" != "" ]; then
 fi
 if [ "$YLABEL" != "" ]; then
 	YLABEL=`echo $YLABEL | sed -e 's/_/\\\_/g'`
-	echo "set ylabel '$YLABEL'" >> $TEMP
+	echo "set ylabel \"$YLABEL\"" >> $TEMP
 fi
 if [ "$LOGX" = "yes" ]; then
 	echo "set log x 2" >> $TEMP

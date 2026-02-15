@@ -79,6 +79,7 @@ sub printDataType() {
 		$xaxis = "-";
 	}
 
+	$subHeading = "all" if ($subHeading eq "");
 	print "$subHeading,$xaxis,$yaxis,$plotType";
 	if ($self->{_SubheadingPlotType} != "") {
 		print ",$self->{_SubheadingPlotType}";
@@ -90,7 +91,7 @@ sub initialise() {
 	my @fieldHeaders;
 	my ($fieldLength, $plotLength, $summaryLength);
 
-	$fieldLength = 12;
+	$fieldLength = 18;
 	@fieldHeaders = ("UnknownType");
 	$fieldLength = $self->{_FieldLength}   if defined $self->{_FieldLength};
 
@@ -237,7 +238,7 @@ sub _time_to_elapsed {
 }
 
 sub printPlot() {
-	my ($self, $subheading) = @_;
+	my ($self, $subheading, $plottype) = @_;
 	my $fieldLength = $self->{_PlotLength};
 
 	print "Unhandled data type for plotting.\n";
@@ -253,7 +254,7 @@ sub extractSummary() {
 }
 
 sub extractReportCached() {
-	my ($self, $reportDir) = @_;
+	my ($self, $reportDir, $altReport) = @_;
 	shift;
 
 	$self->{_CacheHandle} = MMTests::Cache->new("Extract__extractReport", $self->{_ModuleName}, $reportDir);

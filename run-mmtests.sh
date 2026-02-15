@@ -8,6 +8,8 @@ RUNNING_TEST=
 export EXPECT_UNBUFFER=$SCRIPTDIR/bin/unbuffer
 export BUILDONLY=false
 export DELETE_ON_EXIT_FILE=$(mktemp /tmp/mmtest-cleanup-XXXXXXXXX)
+echo $PWD
+. $SCRIPTDIR/shellpacks/user-hooks.sh
 
 # External optimisations and tuning can be specified via the build-flags
 # repository. Set the defaults to use compiler optimisations if available
@@ -324,8 +326,7 @@ fi
 # available and that there is a unable vmlinux file in the expected
 # place
 export EXPANDED_VMLINUX=no
-NR_HOOKS=`ls profile-hooks* 2> /dev/null | wc -l`
-if [ $NR_HOOKS -gt 0 ]; then
+if [ -n "$MONITOR_HOOKS" ]; then
 	VMLINUX=/boot/vmlinux-`uname -r`
 	if [ ! -e $VMLINUX -a -e $VMLINUX.gz ]; then
 		echo Expanding vmlinux.gz file
@@ -338,6 +339,9 @@ if [ $NR_HOOKS -gt 0 ]; then
 		echo 0 > /proc/sys/kernel/nmi_watchdog
 	fi
 fi
+
+# Exposes user defined hooks to test driver.
+export_user_hooks
 
 # Disable any inadvertent profiling going on right now
 if [ "`lsmod | grep oprofile`" != "" ]; then
@@ -359,6 +363,8 @@ rm -rf $SHELLPACK_LOG_RUNBASE &>/dev/null
 mkdir -p $SHELLPACK_LOG_RUNBASE
 
 mmtests_wait_token "mmtests_start"
+
+call_user_hooks init
 
 export MMTESTS_ACTIVITY="$SHELLPACK_LOG_RUNBASE/mmtests-activity"
 for (( MMTEST_ITERATION = 0; MMTEST_ITERATION < $MMTEST_ITERATIONS; MMTEST_ITERATION++ )); do
@@ -748,6 +754,8 @@ for (( MMTEST_ITERATION = 0; MMTEST_ITERATION < $MMTEST_ITERATIONS; MMTEST_ITERA
 	destroy_testdisk
 	gzip -f $SHELLPACK_SYSSTATEFILE
 done
+
+call_user_hooks end
 
 mmtests_wait_token "mmtests_end"
 

@@ -1,0 +1,22 @@
+default-metric: local
+
+metrics:
+  - local
+  - remote
+  - local_v_total
+
+summarise: Multiops
+PlotXaxis: Type Time
+PlotType: operation-candlesticks
+
+local:
+  title: Local Latency
+  units: TIME_USECONDS
+
+remote:
+  title: Remote Latency
+  units: TIME_USECONDS
+
+local_v_total:
+  title: Percentage Placed Local CPU
+  units: OPS_PERCENTAGE

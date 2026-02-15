@@ -1,0 +1,38 @@
+default-metric: tcpstream-send
+
+metrics:
+  - tcpstream-send
+  - udpstream-send
+  - udpstream-recv
+  - tcprr-send
+  - udprr-send
+  - streamstream-send
+
+summarise: Multiops
+preferhigher: true
+PlotXaxis: Buffer Size Bytes
+PlotType: operation-candlesticks
+
+tcprr-send:
+  title: NetPerf TCP RR
+  units: MBITS_PER_SECOND
+
+tcpstream-send:
+  title: NetPerf TCP STREAM
+  units: MBITS_PER_SECOND
+
+udprr-send:
+  title: NetPerf UDP RR
+  units: MBITS_PER_SECOND
+
+udpstream-send:
+  title: NetPerf UDP STREAM
+  units: MBITS_PER_SECOND
+
+udpstream-recv:
+  title: NetPerf UDP STREAM
+  units: MBITS_PER_SECOND
+
+streamstream-send:
+  title: NetPerf UNIX STREAM
+  units: MBITS_PER_SECOND

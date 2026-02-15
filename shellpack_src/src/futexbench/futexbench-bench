@@ -1,7 +1,7 @@
 #!/bin/bash
 # Run perf-bench futex benchmark
 
-###SHELLPACK preamble futexbench-bench 6.15
+###SHELLPACK preamble futexbench-bench 6.18
 TESTTIME=15
 ITERATIONS=12
 TESTLIST=
@@ -50,7 +50,7 @@ echo $FUTEXBENCH_WORKLOADS > $LOGDIR_RESULTS/workloads
 			TEST_ERROR=`grep "wakeup all tasks" $LOGDIR_RESULTS/$WORKLOAD-${NR_THREADS}.log`
 			if [ "$TEST_ERROR" != "" ]; then
 				kill -9 $PERF_PID
-				echo WARNING: perf failed to wake all tasks
+				warn "perf failed to wake all tasks"
 				touch $LOGDIR_RESULTS/$WORKLOAD-${NR_THREADS}.failed
 				TEST_EXIT=""
 			else

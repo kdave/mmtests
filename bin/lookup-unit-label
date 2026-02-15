@@ -1,0 +1,14 @@
+#!/usr/bin/perl -w
+# Print out the human-readable name for units
+
+use FindBin qw($Bin);
+use lib "$Bin/lib/";
+use MMTests::DataTypes;
+
+my $label;
+eval {
+	$label = DataTypes::getDataTypeLabel($ARGV[0]);
+} or do {
+	$label = "Unknown unit ($ARGV[0])";
+};
+print "$label\n";

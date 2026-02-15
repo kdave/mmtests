@@ -1,0 +1,13 @@
+default-metric: usecs/syscall
+
+metrics:
+  - usecs/syscall
+
+summarise: Multiops
+PlotXaxis: Iteration
+PlotType: lines
+DecimalPlaces: 4
+
+usecs/syscall:
+  title: Syscall Duration
+  units: TIME_USECONDS

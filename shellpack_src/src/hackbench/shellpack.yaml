@@ -1,0 +1,19 @@
+default-metric: time
+
+metrics:
+  - time
+
+aliases:
+  - hackbench-process-pipes
+  - hackbench-process-sockets
+  - hackbench-thread-pipes
+  - hackbench-thread-sockets
+
+summarise: Multiops
+PlotXaxis: time
+PlotType: operation-candlesticks
+DecimalPlaces: 4
+
+time:
+  title: Time Communicate Between Groups
+  units: TIME_SECONDS

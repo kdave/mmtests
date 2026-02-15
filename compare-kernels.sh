@@ -16,7 +16,9 @@ KERNEL_COMPARE=
 CHANGE_DIR=
 
 install-depends perl-File-Which
+install-depends perl-YAML-PP
 install-depends python313-scipy
+install-depends python313-yq
 
 while [ "$1" != "" ]; do
 	case $1 in
@@ -405,26 +407,31 @@ generate_latency_graph() {
 generate_client_trans_graphs() {
 	CLIENT_LIST=$1
 	XLABEL="$2"
+	SUBHEADING="$3"
 	if [ "$CLIENT_LIST" = "" ]; then
-		CLIENT_LIST=`$COMPARE_BARE_CMD | grep ^Hmean | awk '{print $2}' | sort -n | uniq`
+		CLIENT_LIST=`$COMPARE_BARE_CMD --sub-heading $SUBHEADING | grep ^Hmean | awk '{print $2}' | sed -e 's/.*-//' | sort -n | uniq`
 		if [ "$CLIENT_LIST" = "" ]; then
-			CLIENT_LIST=`$COMPARE_BARE_CMD | grep ^Amean | awk '{print $2}' | sort -n | uniq`
+			CLIENT_LIST=`$COMPARE_BARE_CMD --sub-heading $SUBHEADING | grep ^Amean | awk '{print $2}' | sed -e 's/.*-//' | sort -n | uniq`
 		fi
+	fi
+	if [ "$SUBHEADING" != "" ] && ! [[ $SUBHEADING =~ - ]]; then
+		SUBHEADING+="-"
 	fi
 	if [ "$XLABEL" = "" ]; then
 		XLABEL="Time"
 	fi
+
 	COUNT=0
 	for CLIENT in $CLIENT_LIST; do
-		CLIENT_FILENAME=`echo $CLIENT | sed -e 's/\///'`
+		CLIENT_FILENAME=`echo $CLIENT | sed -e 's/\///' -e "s/$SUBHEADING//"`
 		echo "<tr>"
 		if [ "$CLIENT" = "1" ]; then
 			LABEL="$SUBREPORT transactions $CLIENT client"
 		else
 			LABEL="$SUBREPORT transactions $CLIENT clients"
 		fi
-		eval $GRAPH_PNG --sub-heading $CLIENT --plottype lines --title \"$LABEL\" --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-trans-${CLIENT_FILENAME} --x-label \"$XLABEL\" --with-smooth
-		eval $GRAPH_PNG --sub-heading $CLIENT --plottype lines --title \"$LABEL sorted\" --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-trans-${CLIENT_FILENAME}-sorted --sort-samples-reverse --x-label \"Sorted samples\"
+		eval $GRAPH_PNG --sub-heading $SUBHEADING$CLIENT\$ --plottype lines --title \"$LABEL\" --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-trans-${CLIENT_FILENAME} --x-label \"$XLABEL\" --with-smooth
+		eval $GRAPH_PNG --sub-heading $SUBHEADING$CLIENT\$ --plottype lines --title \"$LABEL sorted\" --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-trans-${CLIENT_FILENAME}-sorted --sort-samples-reverse --x-label \"Sorted samples\"
 		plain graph-${SUBREPORT}-trans-${CLIENT_FILENAME}
 		plain graph-${SUBREPORT}-trans-${CLIENT_FILENAME}-smooth
 		plain graph-${SUBREPORT}-trans-${CLIENT_FILENAME}-sorted
@@ -485,25 +492,24 @@ restore_cache_mmtests() {
 	unset SAVE_CACHE_MMTESTS
 }
 
-generate_subtest_graphs() {
+generate_subheading_graphs() {
 	COUNT=-1
 	WRAP=$1
-	if [ "$WRAP" = "" ]; then
-		WRAP=3
-	fi
-	SUBTEST_LIST=$2
-	if [ "$SUBTEST_LIST" = "" ]; then
-		SUBTEST_LIST=`eval $EXTRACT_CMD -n $KERNEL | awk '{print $1}' | sort | uniq | sed -e 's/ /@/g'`
-	fi
+	SUBHEADING_LIST=$2
+	SUBTEST=$3
+	SUBTEST_ARG=
+	[ "$WRAP" = ""		  ] && WRAP=3
+	[ "$SUBTEST" != ""	  ] && SUBTEST_ARG="-a $SUBTEST"
+	[ "$SUBHEADING_LIST" = "" ] && SUBHEADING_LIST=`eval $EXTRACT_CMD -n $KERNEL $SUBTEST_ARG | awk '{print $1}' | sort -u`
+
 	save_cache_mmtests
-	for HEADING in $SUBTEST_LIST; do
-		HEADING=`echo $HEADING | sed -e 's/@/ /g'`
-		HEADING_FILENAME=`echo $HEADING | sed -e 's/ //g'`
+	for HEADING in $SUBHEADING_LIST; do
+		HEADING_FILENAME=`echo $HEADING | sed -e 's/:/__/g' -e 's/\///'`
 		COUNT=$((COUNT+1))
 		if [ $((COUNT%$WRAP)) -eq 0 ]; then
 			echo "<tr>"
 		fi
-		eval $GRAPH_PNG --title \"$SUBREPORT $HEADING\" --sub-heading \"$HEADING\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING_FILENAME
+		eval $GRAPH_PNG --title \"$SUBREPORT $HEADING\" $SUBTEST_ARG --sub-heading \"^$HEADING\$\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING_FILENAME
 		plain graph-$SUBREPORT-$HEADING_FILENAME
 		if [ $((COUNT%$WRAP)) -eq $((WRAP-1)) ]; then
 			echo "</tr>"
@@ -512,33 +518,6 @@ generate_subtest_graphs() {
 	if [ $((COUNT%$WRAP)) -ne $((WRAP-1)) ]; then
 		echo "</tr>"
 	fi
-	restore_cache_mmtests
-}
-
-generate_subtest_graphs_sorted() {
-	SUBTEST_LIST=$1
-	if [ "$SUBTEST_LIST" = "" ]; then
-		SUBTEST_LIST=`eval $EXTRACT_CMD -n $KERNEL | awk '{print $1}' | sort | uniq | sed -e 's/ /@/g'`
-	fi
-	save_cache_mmtests
-	for HEADING in $SUBTEST_LIST; do
-		HEADING=`echo $HEADING | sed -e 's/@/ /g'`
-		HEADING_FILENAME=`echo $HEADING | sed -e 's/ //g'`
-		echo "<tr>"
-		eval $GRAPH_PNG --title \"$SUBREPORT $HEADING\" --sub-heading \"$HEADING\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING_FILENAME
-		eval $GRAPH_PNG --title \"$SUBREPORT $HEADING sorted\" --sub-heading \"$HEADING\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING_FILENAME-sorted --sort-samples --sort-percentages 5
-		if [ "$2" != "--logY" ]; then
-			plain graph-$SUBREPORT-$HEADING_FILENAME
-			plain graph-$SUBREPORT-$HEADING_FILENAME-sorted
-		else
-			eval $GRAPH_PNG --title \"$SUBREPORT $HEADING\" --sub-heading \"$HEADING\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING_FILENAME-logY --logY
-			eval $GRAPH_PNG --title \"$SUBREPORT $HEADING sorted\" --sub-heading \"$HEADING\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING_FILENAME-sorted-logY --sort-samples --sort-percentages 5 --logY
-
-			logyover graph-$SUBREPORT-$HEADING_FILENAME
-			logyover graph-$SUBREPORT-$HEADING_FILENAME-sorted
-		fi
-		echo "</tr>"
-	done
 	restore_cache_mmtests
 }
 
@@ -561,7 +540,7 @@ generate_basic_single() {
 	EXTRA="$2"
 
 	if [ "$TITLE" = "" ]; then
-		TITLE="SUBREPORT"
+		TITLE="$SUBREPORT"
 	fi
 	if [ "$EXTRA" != "" ]; then
 		EXTRA_FILENAME=`echo $EXTRA | sed -e 's/--/-/g' | sed -e 's/ /-/g'`
@@ -578,50 +557,22 @@ generate_basic() {
 	echo "</tr>"
 }
 
-generate_subheading_graphs() {
-	SUBHEADING_LIST=$1
-	WRAP=$2
-	SUBTEST=$3
-	EXTRA=$4
-	if [ "$SUBTEST" = "" ]; then
-		SUBTEST=$SUBREPORT
-	fi
-	if [ "$WRAP" = "" ]; then
-		WRAP=3
-	fi
-
-	COUNT=-1
-	for SUBHEADING in $SUBHEADING_LIST; do
-		COUNT=$((COUNT+1))
-		if [ $((COUNT%$WRAP)) -eq 0 ]; then
-			echo "<tr>"
-		fi
-		eval $GRAPH_PNG -b $SUBTEST --title \"$SUBTEST $SUBHEADING\" $EXTRA --sub-heading $SUBHEADING  --output $OUTPUT_DIRECTORY/graph-$SUBTEST-$SUBHEADING
-		plain graph-$SUBTEST-$SUBHEADING
-		if [ $((COUNT%$WRAP)) -eq $((WRAP-1)) ]; then
-			echo "</tr>"
-		fi
-	done
-	if [ $((COUNT%$WRAP)) -ne $((WRAP-1)) ]; then
-		echo "</tr>"
-	fi
-}
-
 generate_subheading_trans_graphs() {
 	SUBHEADING_LIST=$1
 	SUBTEST=$2
-	EXTRA=$3
-	if [ "$SUBTEST" = "" ]; then
-		SUBTEST=$SUBREPORT
+	if [ "$SUBTEST" != "" ]; then
+		SUBTEST_ARG="-a $SUBTEST"
+	fi
+
+	if [ "$SUBHEADING_LIST" = "" ]; then
+		SUBHEADING_LIST=`eval $EXTRACT_CMD $SUBTEST_ARG -n $KERNEL | awk '{print $1}' | sort -u`
 	fi
 
 	for SUBHEADING in $SUBHEADING_LIST; do
 		echo "<tr>"
-		eval $GRAPH_PNG -a $SUBTEST --title \"$SUBTEST $SUBHEADING\" $EXTRA --sub-heading $SUBHEADING  --output $OUTPUT_DIRECTORY/graph-$SUBTEST-$SUBHEADING --x-label Time --with-smooth
-		eval $GRAPH_PNG -a $SUBTEST --title \"$SUBTEST $SUBHEADING sorted\" $EXTRA --sub-heading $SUBHEADING  --output $OUTPUT_DIRECTORY/graph-$SUBTEST-$SUBHEADING-sorted --sort-samples-reverse --x-label \"Sorted samples\"
+		eval $GRAPH_PNG $SUBTEST_ARG --title \"$SUBTEST $SUBHEADING\" $EXTRA --sub-heading $SUBHEADING  --output $OUTPUT_DIRECTORY/graph-$SUBTEST-$SUBHEADING --x-label Time --with-smooth
 		plain graph-$SUBTEST-$SUBHEADING
 		plain graph-$SUBTEST-$SUBHEADING-smooth
-		plain graph-$SUBTEST-$SUBHEADING-sorted
 		echo "</tr>"
 	done
 }
@@ -683,9 +634,9 @@ for SUBREPORT in $REPORTS; do
 			break
 		done
 		;;
-	dbench4)
+	dbench)
 		echo $SUBREPORT Loadfile Execution Time
-		eval $COMPARE_CMD
+		eval $COMPARE_CMD --sub-heading loadfile
 		echo
 		if [ "$FROM_JSON" = "yes" ]; then
 			SUBREPORT_NAMES=('Latency' 'Throughput (misleading but traditional)' 'Per-VFS Operation latency Latency')
@@ -693,21 +644,15 @@ for SUBREPORT in $REPORTS; do
 			min=$(( ${#SUBREPORTS_JSON[@]} < ${#SUBREPORT_NAMES[@]} ?	${#SUBREPORTS_JSON[@]} : ${#SUBREPORT_NAMES[@]} ))
 			for ((i=start; i<min; i++)) do
 				echo "$SUBREPORT ${SUBREPORT_NAMES[$i]}"
-				compare-mmtests.pl -d . -b dbench4 --from-json ${SUBREPORTS_JSON[$i]}
+				compare-mmtests.pl -d . -b dbench --from-json ${SUBREPORTS_JSON[$i]}
 				echo
 			done
 		else
-			echo "$SUBREPORT All Clients Loadfile Execution Time"
-			compare-mmtests.pl -d . -b dbench4 -a completionlag -n $KERNEL_LIST $FORMAT_CMD
-			echo
-			echo "$SUBREPORT Loadfile Complete Spread (Max-Min completions between processes every second)"
-			compare-mmtests.pl -d . -b dbench4 -a completions -n $KERNEL_LIST $FORMAT_CMD
-			echo
 			echo "$SUBREPORT Throughput (misleading but traditional)"
-			compare-mmtests.pl -d . -b dbench4 -a tput -n $KERNEL_LIST $FORMAT_CMD
+			compare-mmtests.pl -d . -b dbench --sub-heading tput -n $KERNEL_LIST $FORMAT_CMD
 			echo
 			echo $SUBREPORT Per-VFS Operation latency Latency
-			compare-mmtests.pl -d . -b dbench4 -a opslatency -n $KERNEL_LIST $FORMAT_CMD
+			compare-mmtests.pl -d . -b dbench --sub-heading op -n $KERNEL_LIST $FORMAT_CMD
 		fi
 		;;
 	bonniepp)
@@ -720,13 +665,10 @@ for SUBREPORT in $REPORTS; do
 		;;
 	ebizzy)
 		echo $SUBREPORT Overall Throughput
-		$COMPARE_CMD
+		$COMPARE_CMD       -d . -b ebizzy --sub-heading total_rec -n $KERNEL_LIST $FORMAT_CMD
 		echo
 		echo $SUBREPORT Per-thread
-		compare-mmtests.pl -d . -b ebizzy -a thread -n $KERNEL_LIST $FORMAT_CMD
-		echo
-		echo $SUBREPORT Thread spread
-		compare-mmtests.pl -d . -b ebizzy -a range -n $KERNEL_LIST $FORMAT_CMD
+		compare-mmtests.pl -d . -b ebizzy --sub-heading thread_rec -n $KERNEL_LIST $FORMAT_CMD
 		;;
 	fio)
 		echo $SUBREPORT Throughput
@@ -739,55 +681,23 @@ for SUBREPORT in $REPORTS; do
 		echo $SUBREPORT Latency write
 		compare-mmtests.pl $AUTO_DETECT_SIGNIFICANCE -d . -b fio -a latency -n $KERNEL_LIST --sub-heading latency-write $FORMAT_CMD
 		echo
-		# all sub-headings (ie. fio-scaling-[rand]{rw,read,write}-{read,write})
-		echo $SUBREPORT scaling
-		compare-mmtests.pl -d . -b fio -a scaling -n $KERNEL_LIST 2> /dev/null
-		# all sub-headings (ie. fio-ssd-{rand|seq}_jobs_{1|4}-qd_{1|32}-bs_{4k|128k}-{read|write})
-		echo $SUBREPORT ssd
-		compare-mmtests.pl -d . -b fio -a ssd -n $KERNEL_LIST 2> /dev/null
-		;;
-	fsmark-single|fsmark-threaded)
-		echo $SUBREPORT
-		$COMPARE_CMD
-		echo
-		echo $SUBREPORT App Overhead
-		compare-mmtests.pl -d . -b ${SUBREPORT}overhead -n $KERNEL_LIST $FORMAT_CMD
 		;;
 	monitor)
 		echo No meaningful extraction script for monitor
 		echo
 		;;
 	nas*)
-		echo $SUBREPORT NAS Time
-		compare-mmtests.pl -d . -b $SUBREPORT -n $KERNEL_LIST $FORMAT_CMD
+		echo $SUBREPORT Elapsed Time
+		compare-mmtests.pl -d . -b ${SUBREPORT} -n $KERNEL_LIST $FORMAT_CMD --sub-heading Elapsed
 		echo
-		echo $SUBREPORT Wall Time
-		compare-mmtests.pl -d . -b ${SUBREPORT} -a time -n $KERNEL_LIST $FORMAT_CMD
+
+		echo $SUBREPORT System CPU Time
+		compare-mmtests.pl -d . -b ${SUBREPORT} -n $KERNEL_LIST $FORMAT_CMD --sub-heading System
 		echo
 		;;
 	netperf-*)
 		echo $SUBREPORT Default report
 		compare-mmtests.pl -d . -b $SUBREPORT -n $KERNEL_LIST $FORMAT_CMD
-
-		echo
-		echo $SUBREPORT Over-time report
-		compare-mmtests.pl -d . -b $SUBREPORT -n $KERNEL_LIST $FORMAT_CMD -a overtime
-		echo
-		;;
-	netpipe)
-		echo $SUBREPORT Throughput
-		compare-mmtests.pl $AUTO_DETECT_SIGNIFICANCE -d . -b netpipe -a 4mb -n $KERNEL_LIST $FORMAT_CMD
-		echo
-		;;
-	parallelio)
-		echo $SUBREPORT Transactions
-		eval $COMPARE_CMD
-		echo
-		echo $SUBREPORT Background IO
-		compare-mmtests.pl -d . -b parallelio -a io -n $KERNEL_LIST $FORMAT_CMD
-		echo
-		echo $SUBREPORT Swap totals
-		compare-mmtests.pl -d . -b parallelio -a swap -n $KERNEL_LIST $FORMAT_CMD
 		;;
 	parsecbuild)
 		echo $SUBREPORT
@@ -795,18 +705,18 @@ for SUBREPORT in $REPORTS; do
 	pgbench)
 		echo $SUBREPORT Transactions
 		eval $COMPARE_CMD
-		compare-mmtests.pl $AUTO_DETECT_SIGNIFICANCE -d . -b pgbench -a stalls -n $KERNEL_LIST $FORMAT_CMD > /tmp/pgbench-$$
-		TEST=`grep MinStall-1 /tmp/pgbench-$$ | grep -v nan`
-		if [ "$TEST" != "" ]; then
-			echo
-			echo $SUBREPORT Stalls
-			cat /tmp/pgbench-$$
-		fi
-		rm /tmp/pgbench-$$
+		compare-mmtests.pl $AUTO_DETECT_SIGNIFICANCE -d . -b pgbench -a stalls -n $KERNEL_LIST $FORMAT_CMD
 		echo
 		echo $SUBREPORT Time
 		compare-mmtests.pl -d . -b pgbench -a exectime -n $KERNEL_LIST $FORMAT_CMD
 		echo
+		;;
+	redis)
+		for HEADING in RPS lat95; do
+			echo $SUBREPORT $HEADING
+			eval $COMPARE_CMD --sub-heading ".*$HEADING"
+			echo
+		done
 		;;
 	redis-memtier)
 		for HEADING in Ops/sec Hits/sec Miss/sec; do
@@ -847,16 +757,6 @@ for SUBREPORT in $REPORTS; do
 		compare-mmtests.pl -d . -b stockfish -a time -n $KERNEL_LIST $FORMAT_CMD
 		echo
 		;;
-	stutterp)
-		echo $SUBREPORT
-		$COMPARE_CMD
-		echo
-		echo $SUBREPORT estimated write speed
-		compare-mmtests.pl -d . -b $SUBREPORT -a calibrate -n $KERNEL_LIST $FORMAT_CMD
-		echo
-		echo $SUBREPORT parallel write throughput
-		compare-mmtests.pl -d . -b $SUBREPORT -a throughput -n $KERNEL_LIST $FORMAT_CMD
-		;;
 	sysbench)
 		echo $SUBREPORT Transactions
 		eval $COMPARE_CMD
@@ -865,9 +765,9 @@ for SUBREPORT in $REPORTS; do
 		compare-mmtests.pl -d . -b sysbench -a exectime -n $KERNEL_LIST $FORMAT_CMD
 		echo
 		;;
-	tbench4)
+	tbench)
 		echo $SUBREPORT Loadfile Execution Time
-		eval $COMPARE_CMD
+		eval $COMPARE_CMD --sub-heading loadfile
 		echo
 		if [ "$FROM_JSON" = "yes" ]; then
 			SUBREPORT_NAMES=('Latency' 'Throughput (misleading but traditional)' 'Per-VFS Operation latency Latency')
@@ -875,32 +775,29 @@ for SUBREPORT in $REPORTS; do
 			min=$(( ${#SUBREPORTS_JSON[@]} < ${#SUBREPORT_NAMES[@]} ?	${#SUBREPORTS_JSON[@]} : ${#SUBREPORT_NAMES[@]} ))
 			for ((i=start; i<min; i++)) do
 				echo "$SUBREPORT ${SUBREPORT_NAMES[$i]}"
-				compare-mmtests.pl -d . -b tbench4 --from-json ${SUBREPORTS_JSON[$i]}
+				compare-mmtests.pl -d . -b tbench --from-json ${SUBREPORTS_JSON[$i]}
 				echo
 			done
 		else
-			echo "$SUBREPORT All Clients Loadfile Execution Time"
-			compare-mmtests.pl -d . -b tbench4 -a completionlag -n $KERNEL_LIST $FORMAT_CMD
-			echo
-			echo "$SUBREPORT Loadfile Complete Spread (Max-Min completions between processes every second)"
-			compare-mmtests.pl -d . -b tbench4 -a completions -n $KERNEL_LIST $FORMAT_CMD
 			echo "$SUBREPORT Throughput (misleading but traditional)"
-			compare-mmtests.pl -d . -b tbench4 -a tput -n $KERNEL_LIST $FORMAT_CMD
+			compare-mmtests.pl -d . -b tbench -n $KERNEL_LIST $FORMAT_CMD --sub-heading tput
 			echo
 			echo $SUBREPORT Per-VFS Operation latency Latency
-			compare-mmtests.pl -d . -b tbench4 -a opslatency -n $KERNEL_LIST $FORMAT_CMD
+			compare-mmtests.pl -d . -b tbench -n $KERNEL_LIST $FORMAT_CMD --sub-heading op
 		fi
 		;;
 
 	trunc)
-		echo $SUBREPORT Truncate files
-		eval $COMPARE_CMD
-		echo
-		echo $SUBREPORT Fault files
-		compare-mmtests.pl -d . -b trunc -a fault -n $KERNEL_LIST $FORMAT_CMD
+		for OP in trunc fault; do
+			for TYPE in Elapsed System; do
+				echo $SUBREPORT $TYPE $OP
+				compare-mmtests.pl -d . -b trunc --sub-heading $TYPE-$OP  -n $KERNEL_LIST $FORMAT_CMD
+				echo
+			done
+		done
 		echo
 		;;
-	thpchallenge|thpcompact)
+	thpchallenge)
 		echo $SUBREPORT Fault Latencies
 		eval $COMPARE_CMD
 		echo
@@ -1065,11 +962,10 @@ for SUBREPORT in $REPORTS; do
 		adrestia-wakeup-*)
 			;;
 		aim9)
-			generate_subtest_graphs 2
+			generate_subheading_graphs 2 "" ""
 			;;
-		bonnie)
-			SUBTEST_LIST=`$EXTRACT_CMD -n $KERNEL | awk '{print $1" "$2}' | sort | uniq | sed -e 's/ /@/g' -e 's/[0-9]//g'`
-			generate_subtest_graphs_sorted "$SUBTEST_LIST" --logY
+		bonniepp)
+			generate_subheading_graphs 3 "" ""
 			;;
 		autonumabench)
 			echo "<tr>"
@@ -1089,7 +985,7 @@ for SUBREPORT in $REPORTS; do
 			echo "</tr>"
 			;;
 		blogbench)
-			generate_subheading_graphs "Read Write"
+			generate_subheading_graphs 2 "" ""
 			;;
 		cyclictest)
 			for HEADING in Max Avg; do
@@ -1097,47 +993,18 @@ for SUBREPORT in $REPORTS; do
 				plain graph-$SUBREPORT-$HEADING
 			done
 			;;
-		cyclictest-fine-*)
-			eval $GRAPH_PNG --wide --logY --title \"$SUBREPORT Latency\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING
-			eval $GRAPH_PNG --wide --logX --logY --title \"$SUBREPORT Latency sorted\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING-sorted --sort-samples-reverse
-			eval $GRAPH_PNG --very-large --logY --title \"$SUBREPORT Latency sorted\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING-sorted-percentage --sort-samples --sort-percentages 1 --rotate-xaxis
-			eval $GRAPH_PNG --very-large --logY --title \"$SUBREPORT Latency sorted\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING-sorted-percentage-tail --sort-samples --sort-percentages 1 --xrange 99:100 --xtics 0.1 --rotate-xaxis
-			eval $GRAPH_PNG --very-large --logY --title \"$SUBREPORT Latency sorted last 1%\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING-sorted-percentage-tail-99-100 --sort-samples --sort-percentages 1 --xrange 99:100 --xtics 0.1 --rotate-xaxis
-			eval $GRAPH_PNG --very-large --title \"$SUBREPORT Latency sorted 95-99.9%\" --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING-sorted-percentage-tail-95-99 --sort-samples --sort-percentages 1 --xrange 95:99.9 --xtics 0.5 --rotate-xaxis
+		dbench)
 			echo "<tr>"
-			plain graph-$SUBREPORT-$HEADING
-			echo "</tr>"
-			echo "<tr>"
-			plain graph-$SUBREPORT-$HEADING-sorted
-			echo "</tr>"
-			echo "<tr>"
-			plain graph-$SUBREPORT-$HEADING-sorted-percentage
-			echo "</tr>"
-			echo "<tr>"
-			plain graph-$SUBREPORT-$HEADING-sorted-percentage-tail-99-100
-			echo "</tr>"
-			echo "<tr>"
-			plain graph-$SUBREPORT-$HEADING-sorted-percentage-tail-95-99
-			echo "</tr>"
-			;;
-		pmqtest-pinned|pmqtest-unbound)
-			for HEADING in Min Max Avg; do
-				eval $GRAPH_PNG --title \"$SUBREPORT Latency $HEADING\" --sub-heading $HEADING --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING
-				plain graph-$SUBREPORT-$HEADING
-			done
-			;;
-		dbench4)
-			echo "<tr>"
-			generate_basic_single "$SUBREPORT Completion times" "--logX"
-			generate_basic_single "$SUBREPORT Completion times" "--logX --logY"
-			generate_client_trans_graphs "`$COMPARE_BARE_CMD | grep ^Min | awk '{print $2}' | sort -n | uniq`" "Estimated time"
+			generate_basic_single "$SUBREPORT Loadfile Completion Times" "--sub-heading loadfile --logX"
+			generate_basic_single "$SUBREPORT Loadfile Completion Times" "--sub-heading loadfile --logX --logY"
+			generate_client_trans_graphs "" "Sample" "loadfile"
 			echo "</tr>"
 			;;
 		ebizzy)
 			generate_basic "$SUBREPORT" "--logX"
 			;;
 		fio)
-			generate_subheading_trans_graphs "latency-read latency-write" "latency" "--logY"
+			generate_subheading_graphs 2 "" "latency"
 			;;
 		fsmark-threaded|fsmark-single)
 			generate_client_trans_graphs "`$COMPARE_BARE_CMD | grep ^Min | awk '{print $2}' | sort -n | uniq`"
@@ -1152,6 +1019,9 @@ for SUBREPORT in $REPORTS; do
 			generate_basic "$SUBREPORT" "--logX"
 			;;
 		highalloc)
+			;;
+		iperf3*)
+			generate_subheading_graphs 3 "`$EXTRACT_CMD -n $KERNEL $SUBTEST_ARG | awk '{print $1}' | sort -t- -k1,1 -k4,4n -k3,3n -k2,2n -u`" ""
 			;;
 		kernbench)
 			echo "<tr>"
@@ -1173,7 +1043,8 @@ for SUBREPORT in $REPORTS; do
 			done
 			echo "</tr>"
 			;;
-		libmicro)
+		libmicro*)
+			generate_subheading_graphs 4 "" ""
 			;;
 		micro)
 			;;
@@ -1210,10 +1081,19 @@ for SUBREPORT in $REPORTS; do
 
 			generate_client_trans_graphs
 			;;
+		pmqtest-pinned|pmqtest-unbound)
+			for HEADING in Min Max Avg; do
+				eval $GRAPH_PNG --title \"$SUBREPORT Latency $HEADING\" --sub-heading $HEADING --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$HEADING
+				plain graph-$SUBREPORT-$HEADING
+			done
+			;;
 		pistress)
 			;;
 		redis*)
 			generate_ops_graphs
+			;;
+		saladfork)
+			generate_subheading_graphs 3 "local remote local_v_total" ""
 			;;
 		schbench)
 			;;
@@ -1245,7 +1125,7 @@ for SUBREPORT in $REPORTS; do
 		specjbb2013)
 			;;
 		sqlite)
-			generate_subheading_trans_graphs "Trans" "sqlite"
+			generate_subheading_graphs 2 "" ""
 			;;
 		stockfish)
 			echo "<tr>"
@@ -1254,6 +1134,9 @@ for SUBREPORT in $REPORTS; do
 			plain graph-$SUBREPORT
 			plain graph-$SUBREPORT-time
 			echo "</tr>"
+			;;
+		stream)
+			generate_subheading_graphs 4 "" ""
 			;;
 		sysbench)
 			echo "<tr>"
@@ -1272,28 +1155,11 @@ for SUBREPORT in $REPORTS; do
 				echo "</tr>"
 			done
 			;;
-		vdsotest)
-			for HEADING in syscall vdso; do
-				eval $GRAPH_PNG --wide --title \"$SUBREPORT $HEADING\" --sub-heading $HEADING --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-${HEADING}
-				echo "<tr>"
-				plain graph-$SUBREPORT-$HEADING
-				echo "</tr>"
-			done
-			;;
-		tbench4)
+		tbench)
 			echo "<tr>"
 			generate_basic_single "$SUBREPORT Throughput" "--logX"
 			generate_basic_single "$SUBREPORT Throughput" "--logX --logY"
 			generate_client_trans_graphs "`$COMPARE_BARE_CMD | grep ^Min | awk '{print $2}' | sort -n | uniq`" "Estimated time"
-			echo "</tr>"
-			;;
-		thpcompact)
-			echo "<tr>"
-
-			for SIZE in fault-base fault-huge; do
-				eval $GRAPH_PNG        -b thpcompact --title \"$SUBREPORT $SIZE\" --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-$SIZE --sub-heading $SIZE
-				plain graph-$SUBREPORT-$SIZE
-			done
 			echo "</tr>"
 			;;
 		unixbench-dhry2reg|unixbench-syscall|unixbench-pipe|unixbench-spawn|unixbench-execl)
@@ -1323,16 +1189,6 @@ for SUBREPORT in $REPORTS; do
 						eval $GRAPH_PNG --title \"$SUBREPORT $SUB_WORKLOAD $ADDRSPACE\" --sub-heading $SUB_WORKLOAD-$ADDRSPACE --output $OUTPUT_DIRECTORY/graph-$SUBREPORT-$SUB_WORKLOAD-$ADDRSPACE
 						plain graph-$SUBREPORT-$SUB_WORKLOAD-$ADDRSPACE
 				done
-				echo "</tr>"
-			done
-			;;
-		wptlbflush)
-			for CLIENT in `$COMPARE_BARE_CMD | grep ^Min | awk '{print $2}' | sed -e 's/.*-//' | sort -n | uniq`; do
-				echo "<tr>"
-				eval $GRAPH_PNG -b $SUBREPORT --title \"$SUBREPORT $CLIENT procs\" --sub-heading procs-$CLIENT --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-$CLIENT --with-smooth
-				eval $GRAPH_PNG -b $SUBREPORT --title \"$SUBREPORT $CLIENT procs sorted\" --sub-heading procs-$CLIENT --output $OUTPUT_DIRECTORY/graph-${SUBREPORT}-$CLIENT-sorted --sort-samples-reverse
-				smoothover graph-$SUBREPORT-$CLIENT
-				plain graph-$SUBREPORT-$CLIENT-sorted
 				echo "</tr>"
 			done
 			;;

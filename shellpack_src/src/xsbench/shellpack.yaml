@@ -1,0 +1,13 @@
+default-metric: lookups/sec
+
+metrics:
+  - lookups/sec
+
+summarise: Multiops
+preferhigher: true
+PlotXaxis: USecs/Operation
+PlotType: operation-candlesticks
+
+lookups/sec:
+  title: Lookups/second
+  units: TRANS_PER_SECOND

@@ -1,0 +1,17 @@
+default-metric: tcp
+
+metrics:
+  - tcp
+  - udp
+
+summarise: Multiops
+preferhigher: true
+PlotXaxis: MBit/sec
+PlotType: operation-candlesticks
+units: MBITS_PER_SECOND
+
+tcp:
+  title: TCP
+
+udp:
+  title: UDP

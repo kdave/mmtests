@@ -16,6 +16,35 @@ sub new() {
 	return $self;
 }
 
+sub setSummaryMultiops() {
+	my ($self) = @_;
+	$self->{_SummaryStats} = [ "min", "_mean", "stddev-_mean",
+		"coeffvar-_mean", "max", "_mean-50", "_mean-95", "_mean-99" ];
+	$self->{_RatioSummaryStat} = [ "_mean", "meanci_low-_mean",
+		"meanci_high-_mean" ];
+	$self->{_RatioCompareOp} = "cidiff";
+	$self->{_Summarytype} = "Multiops";
+}
+
+sub setSummarySingleops() {
+	my ($self) = @_;
+	$self->{_SummaryStats} = [ "_value" ];
+	$self->{_RatioSummaryStat} = [ "_value" ];
+	delete $self->{_RatioCompareOp};
+	$self->{_Summarytype} = "Singleops";
+}
+
+sub setSummarySubselection() {
+	my ($self) = @_;
+
+	$self->{_SummaryStats} = [ "min", "_mean", "_mean-50", "_mean-90", "_mean-95", "_mean-99", "stddev-_mean",
+		"coeffvar-_mean", "max", "submean-_mean", "submeanci-_mean" ];
+	$self->{_RatioSummaryStat} = [ "submean-_mean", "submeanci_low-_mean",
+				       "submeanci_high-_mean" ];
+	$self->{_RatioCompareOp} = "cidiff";
+	$self->{_Summarytype} = "Subselection";
+}
+
 sub initialise() {
 	my ($self, $subHeading) = @_;
 	my $plotType = "candlesticks";
@@ -36,7 +65,9 @@ sub initialise() {
 	$self->SUPER::initialise($subHeading);
 	$self->{_FieldLength} = 12 if ($self->{_FieldLength} == 0);
 	my $fieldLength = $self->{_FieldLength};
-	$self->{_FieldFormat} = [ "%${fieldLength}d", "%${fieldLength}.2f" ];
+	my $precision = (defined($self->{_Precision}) ? $self->{_Precision} : 2);
+
+	$self->{_FieldFormat} = [ "%${fieldLength}d", "%${fieldLength}.${precision}f" ];
 	$self->{_FieldHeaders} = [ "Sample", $opName ];
 	for (my $header = 0; $header < scalar @{$self->{_SummaryStats}};
 	     $header++) {
@@ -110,7 +141,7 @@ sub ratioSummaryOps() {
 }
 
 sub printPlot() {
-	my ($self, $subHeading) = @_;
+	my ($self, $subHeading, $plottype) = @_;
 	my %data = %{$self->{_ResultData}};
 	my @_operations;
 	my $fieldLength = $self->{_FieldLength};
@@ -121,6 +152,8 @@ sub printPlot() {
 	}
 	@_operations = $self->getOperations($subHeading);
 
+	$self->{_PlotType} = $plottype if defined($plottype);
+	$self->{_PlotType} = "simple-samples" if ($plottype eq "lines");
 	if ($subHeading ne "" && $self->{_ExactSubheading} == 1) {
 		if (defined $self->{_ExactPlottype}) {
 			$self->{_PlotType} = $self->{_ExactPlottype};
@@ -161,8 +194,13 @@ sub printPlot() {
 		}
 
 		$nr_headings++;
-		if ($self->{_PlotType} =~ /simple.*/) {
+		if ($self->{_PlotType} =~ /simple.*/ || $self->{_PlotType} eq "lines") {
 			my $fake_samples = 0;
+			if ($self->{_PlotType} eq "lines") {
+				$niceheading .= "-";
+			} else {
+				$niceheading = "";
+			}
 
 			if ($self->{_PlotType} =~ /simple-samples/) {
 				$fake_samples = 1;
@@ -174,7 +212,7 @@ sub printPlot() {
 					$stamp = $samples;
 				}
 
-				print("$stamp $units[$samples]\n");
+				print("$niceheading$stamp $units[$samples]\n");
 			}
 		} elsif ($self->{_PlotType} eq "candlesticks") {
 			printf "%-${fieldLength}s ", $niceheading;

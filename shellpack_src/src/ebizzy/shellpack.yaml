@@ -1,0 +1,19 @@
+default-metric: total_rsec
+
+metrics:
+  - total_rsec
+  - thread_rsec
+
+summarise: Multiops
+preferhigher: true
+PlotXaxis: Threads
+PlotYaxis: Records/second
+PlotType: client-candlesticks
+
+total_rsec:
+  title: Aggregate Threads Operations
+  units: OPS_PER_SECOND
+
+thread_rsec:
+  title: Per-Thread Operations
+  units: OPS_PER_SECOND

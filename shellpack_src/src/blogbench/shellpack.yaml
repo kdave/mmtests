@@ -1,0 +1,18 @@
+default-metric: writes
+
+metrics:
+  - reads
+  - writes
+
+summarise: Multiops
+preferhigher: true
+PlotXaxis: Score
+PlotType: operation-candlesticks
+
+reads:
+  title: Read Score
+  units: OPS_SCORE
+
+writes:
+  title: Write Score
+  units: OPS_SCORE

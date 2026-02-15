@@ -1,5 +1,6 @@
 # ExtractFactory.pm
 package MMTests::ExtractFactory;
+use FindBin qw($Bin);
 use MMTests::Report;
 use strict;
 
@@ -11,22 +12,77 @@ sub new() {
 	return $self;
 }
 
-sub loadModule($$$) {
-	my ($self, $type, $moduleName, $testName, $subheading) = @_;
-	printVerbose("Loading module $moduleName\n");
+sub lookupShellpackRoot($) {
+	my $moduleName = lcfirst($_[0]);
+	my $lastModuleName = "";
 
+	do {
+		printVerbose("Trying  module $moduleName\n");
+		my $candidate = "$Bin/../shellpack_src/src/$moduleName";
+		return $candidate if -e $candidate;
+
+		$lastModuleName = $moduleName;
+		$moduleName =~ s/-[a-zA-Z_.0-9]*$//;
+	} while ($lastModuleName ne $moduleName);
+
+	return "";
+}
+
+sub loadModule($$$$$) {
+	my ($self, $type, $moduleName, $testName, $subheading, $altreport, $opt_format) = @_;
+	my ($altExt);
+
+	if (!defined($opt_format)) {
+		$opt_format="generic";
+	}
+
+	$altExt = "-$altreport" if ($altreport ne "");
+	printVerbose("Loading module $type $moduleName$altExt\n");
+
+	# Construct module name
+	my $loadModule;
 	my $pmName = ucfirst($moduleName);
 	$pmName =~ s/-//g;
 	$pmName =~ s/Bonnie\+\+/Bonniepp/;
 	$type = ucfirst($type);
-   	require "MMTests/$type$pmName.pm";
-    	$pmName->import();
+	$loadModule = "MMTests/$type$pmName.pm";
 
-	my $className = "MMTests::$type$pmName";
+	# Load specific module if available or generic extraction
+	# module if YAML configuration exists
+	my $className;
+	my $shellpackRoot = lookupShellpackRoot($moduleName);
+	my $shellpackConfig = $shellpackRoot . "/shellpack$altExt.yaml";
+	if (eval "require \"$loadModule\"") {
+		printVerbose("Import  specific module MMTests::$type$pmName\n");
+		$pmName->import();
+		$className = "MMTests::$type$pmName";
+        } else {
+		die("Extraction module $type$pmName does not exist and generic extraction not configured at $shellpackConfig") if (! -e $shellpackConfig);
+		$loadModule = "MMTests/${type}Shellpack.pm";
+		$className = "MMTests::${type}Shellpack";
+		$pmName = "Shellpack";
+		require $loadModule;
+		$pmName->import();
+		printVerbose("Import  generic module MMTests::ExtractShellpack\n");
+	}
+
+	# Common module configuration
 	my $classInstance = $className->new(0);
+	$classInstance->{_Precision} = (($type eq "Extract") ? 8 : 2);
+	$classInstance->{_ModuleName} = "$type$pmName";
 	$classInstance->{_TestName} = $testName;
+	$classInstance->{_ShellpackRoot} = $shellpackRoot;
+	if (-e $shellpackConfig) {
+		$classInstance->{_ShellpackConfig} = $shellpackConfig;
+		$classInstance->{_ShellpackParser} = $classInstance->{_ShellpackRoot}  . "/parse-results$altExt";
+		die("Shellpack config ($shellpackConfig) exists but parse-results$altExt does not exist") if (! -f $classInstance->{_ShellpackParser});
+		die("Shellpack config ($shellpackConfig) exists but parse-results$altExt is not executable") if (! -x $classInstance->{_ShellpackParser});
+		printVerbose("Result  parser $classInstance->{_ShellpackParser}\n");
+		printVerbose("YAML    config $shellpackConfig\n");
+	}
 	$classInstance->initialise($subheading);
-	$classInstance->setFormat("generic");
+	$classInstance->setFormat($opt_format);
+
 	printVerbose("Loaded  module " . $classInstance->getModuleName() . "\n");
 
 	bless $classInstance, $className;
