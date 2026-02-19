@@ -16,19 +16,28 @@ cd $LOGDIR || exit 1
 # extra:	Optional value, currently used to identify a metric+factor for dashboard comparisons
 for HEADING in `ls benchlog-*-1.xz | awk -F - '{print $2}'`; do
 	for NR_CLIENT in `\ls benchlog-$HEADING-*.xz | sed -e 's/.xz$//' | cut -f3 -d- | sort -n`; do
-		ITERATION=0
 		case $HEADING in
 		loadfile)
-			for VALUE in `xzcat benchlog-$HEADING-$NR_CLIENT.xz | awk '{print $4}'`; do
-				((ITERATION++))
-				echo -e "loadfile\t$NR_CLIENT\t_\t$ITERATION\t$VALUE\tR"
-			done
+			xzcat benchlog-$HEADING-$NR_CLIENT.xz |
+				awk '{ print \
+					"loadfile",	# metric
+					nr,		# factorA
+					"_",		# factorB
+					NR,		# interval
+					$4,		# value
+					"R"		# extra
+				    }' OFS="\t" nr=$NR_CLIENT
 			;;
 		tput)
-			for VALUE in `xzcat benchlog-$HEADING-$NR_CLIENT.xz | awk '{print $3}'`; do
-				((ITERATION++))
-				echo -e "tput\t$NR_CLIENT\t_\t$ITERATION\t$VALUE\t_"
-			done
+			xzcat benchlog-$HEADING-$NR_CLIENT.xz |
+				awk '{ print \
+					"tput",		# metric
+					nr,		# factorA
+					"_",		# factorB
+					NR,		# interval
+					$3,		# value
+					"_"		# extra
+				    }' OFS="\t" nr=$NR_CLIENT
 			;;
 		op)
 			xzcat benchlog-$HEADING-$NR_CLIENT.xz |
