@@ -31,7 +31,15 @@ for HEADING in `ls benchlog-*-1.xz | awk -F - '{print $2}'`; do
 			done
 			;;
 		op)
-			xzcat benchlog-$HEADING-$NR_CLIENT.xz | awk "{print \"op-\"\$1\"\t$NR_CLIENT\t_\t\"$ITERATION\"\t\"\$3\"\t_\"}"
+			xzcat benchlog-$HEADING-$NR_CLIENT.xz |
+				awk '{ print \
+					"op-"$1,	# metric
+					nr,		# factorA
+					"_",		# factorB
+					0,		# interval
+					$3,		# value
+					"_"		# extra
+				}' OFS="\t" nr=$NR_CLIENT
 			;;
 		*)
 		esac
