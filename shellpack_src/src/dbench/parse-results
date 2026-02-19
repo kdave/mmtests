@@ -23,7 +23,7 @@ for HEADING in `ls benchlog-*-1.xz | awk -F - '{print $2}'`; do
 					"loadfile",	# metric
 					nr,		# factorA
 					"_",		# factorB
-					NR,		# interval
+					$8/1000,	# interval
 					$4,		# value
 					"R"		# extra
 				    }' OFS="\t" nr=$NR_CLIENT
@@ -34,7 +34,7 @@ for HEADING in `ls benchlog-*-1.xz | awk -F - '{print $2}'`; do
 					"tput",		# metric
 					nr,		# factorA
 					"_",		# factorB
-					NR,		# interval
+					$6,		# interval
 					$3,		# value
 					"_"		# extra
 				    }' OFS="\t" nr=$NR_CLIENT
